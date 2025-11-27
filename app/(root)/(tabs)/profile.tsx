@@ -1,4 +1,4 @@
-import { useUser } from "@clerk/clerk-expo";
+import { useUser } from "@/lib/auth-context";
 import { Image, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -18,7 +18,7 @@ const Profile = () => {
         <View className="flex items-center justify-center my-5">
           <Image
             source={{
-              uri: user?.externalAccounts[0]?.imageUrl ?? user?.imageUrl,
+              uri: user?.image || "https://via.placeholder.com/150",
             }}
             style={{ width: 110, height: 110, borderRadius: 110 / 2 }}
             className=" rounded-full h-[110px] w-[110px] border-[3px] border-white shadow-sm shadow-neutral-300"
@@ -29,7 +29,7 @@ const Profile = () => {
           <View className="flex flex-col items-start justify-start w-full">
             <InputField
               label="First name"
-              placeholder={user?.firstName || "Not Found"}
+              placeholder={user?.name?.split(" ")[0] || "Not Found"}
               containerStyle="w-full"
               inputStyle="p-3.5"
               editable={false}
@@ -37,7 +37,7 @@ const Profile = () => {
 
             <InputField
               label="Last name"
-              placeholder={user?.lastName || "Not Found"}
+              placeholder={user?.name?.split(" ")[1] || "Not Found"}
               containerStyle="w-full"
               inputStyle="p-3.5"
               editable={false}
@@ -46,7 +46,7 @@ const Profile = () => {
             <InputField
               label="Email"
               placeholder={
-                user?.primaryEmailAddress?.emailAddress || "Not Found"
+                user?.email || "Not Found"
               }
               containerStyle="w-full"
               inputStyle="p-3.5"
@@ -55,7 +55,7 @@ const Profile = () => {
 
             <InputField
               label="Phone"
-              placeholder={user?.primaryPhoneNumber?.phoneNumber || "Not Found"}
+              placeholder={"Not Available"}
               containerStyle="w-full"
               inputStyle="p-3.5"
               editable={false}

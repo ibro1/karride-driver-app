@@ -51,8 +51,9 @@
         "origin": "https://carride.ng/"
       },
       "eas": {
-        "projectId": "950117d3-4e5d-4473-a115-12367fb64327"
+        "projectId": "f192321c-d635-4830-ba1b-8253d8a0ca01"
       }
-    }
+    },
+    "owner": "netlinko"
   }
 }

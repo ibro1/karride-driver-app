@@ -6,6 +6,7 @@ import {
     signOutUser,
     getSession as getSessionAPI,
     verifyEmail as verifyEmailAPI,
+    sendVerificationCode as sendVerificationCodeAPI,
 } from "./auth-api";
 
 interface User {
@@ -31,6 +32,7 @@ interface AuthContextType {
     ) => Promise<void>;
     signOut: () => Promise<void>;
     verifyEmail: (email: string, code: string) => Promise<void>;
+    sendVerificationCode: (email: string) => Promise<void>;
     refreshSession: () => Promise<void>;
 }
 
@@ -110,6 +112,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         await loadSession();
     };
 
+    const sendVerificationCode = async (email: string) => {
+        try {
+            await sendVerificationCodeAPI(email);
+        } catch (error) {
+            throw error;
+        }
+    };
+
     const value: AuthContextType = {
         user,
         isLoaded,
@@ -118,6 +128,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         signUp,
         signOut,
         verifyEmail,
+        sendVerificationCode,
         refreshSession,
     };
 

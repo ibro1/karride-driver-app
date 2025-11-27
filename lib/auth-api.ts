@@ -22,10 +22,11 @@ export const signInWithEmail = async (
     email: string,
     password: string,
 ): Promise<AuthResponse> => {
-    const response = await fetch(`${API_URL}/api/auth/sign-in`, {
+    const response = await fetch(`${API_URL}/api/auth/sign-in/email`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
+            "Origin": "myapp://",
         },
         body: JSON.stringify({
             email,
@@ -57,10 +58,11 @@ export const signUpWithEmail = async (
     name: string,
     gender: boolean,
 ): Promise<AuthResponse> => {
-    const response = await fetch(`${API_URL}/api/auth/sign-up`, {
+    const response = await fetch(`${API_URL}/api/auth/sign-up/email`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
+            "Origin": "myapp://",
         },
         body: JSON.stringify({
             email,
@@ -89,20 +91,45 @@ export const signUpWithEmail = async (
  * Verify email with code
  */
 export const verifyEmail = async (email: string, code: string): Promise<any> => {
-    const response = await fetch(`${API_URL}/api/auth/verify-email`, {
+    const response = await fetch(`${API_URL}/api/auth/email-otp/verify-email`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
+            "Origin": "myapp://",
         },
         body: JSON.stringify({
             email,
-            code,
+            otp: code,
         }),
     });
 
     if (!response.ok) {
         const error: ErrorResponse = await response.json();
         throw new Error(error.message || error.error || "Verification failed");
+    }
+
+    return await response.json();
+};
+
+/**
+ * Send verification code (resend)
+ */
+export const sendVerificationCode = async (email: string): Promise<any> => {
+    const response = await fetch(`${API_URL}/api/auth/email-otp/send-verification-otp`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Origin": "myapp://",
+        },
+        body: JSON.stringify({
+            email,
+            type: "email-verification",
+        }),
+    });
+
+    if (!response.ok) {
+        const error: ErrorResponse = await response.json();
+        throw new Error(error.message || error.error || "Failed to send verification code");
     }
 
     return await response.json();
@@ -121,6 +148,7 @@ export const signOutUser = async (): Promise<void> => {
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
+                    "Origin": "myapp://",
                 },
             });
         } catch (error) {
@@ -148,6 +176,7 @@ export const getSession = async (): Promise<any> => {
             headers: {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${token}`,
+                "Origin": "myapp://",
             },
         });
 
@@ -282,6 +311,7 @@ export const signInWithGoogle = async (idToken: string): Promise<AuthResponse> =
         method: "POST",
         headers: {
             "Content-Type": "application/json",
+            "Origin": "myapp://",
         },
         body: JSON.stringify({
             idToken,

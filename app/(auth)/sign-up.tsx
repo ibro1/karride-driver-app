@@ -10,8 +10,9 @@ import { icons, images } from "@/constants";
 import { useAuth } from "@/lib/auth-context";
 
 const SignUp = () => {
-  const { signUp, verifyEmail, isLoaded } = useAuth();
+  const { signUp, verifyEmail, sendVerificationCode, isLoaded } = useAuth();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -27,6 +28,7 @@ const SignUp = () => {
 
   const onSignUpPress = async () => {
     if (!isLoaded) return;
+    setIsSubmitting(true);
     try {
       await signUp(form.email, form.password, form.name, form.gender);
       setVerification({
@@ -35,12 +37,28 @@ const SignUp = () => {
       });
     } catch (err: any) {
       console.error("Sign up error:", err);
-      Alert.alert("Error", err.message || "Sign up failed. Please try again.");
+      if (err.message.includes("already exists") || err.message.includes("User already exists")) {
+        try {
+          await sendVerificationCode(form.email);
+          setVerification({
+            ...verification,
+            state: "pending",
+          });
+          Alert.alert("Account Exists", "An account with this email already exists. We've sent a new verification code.");
+        } catch (resendErr: any) {
+          Alert.alert("Error", "Account exists but failed to send verification code. Please log in.");
+        }
+      } else {
+        Alert.alert("Error", err.message || "Sign up failed. Please try again.");
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const onPressVerify = async () => {
     if (!isLoaded) return;
+    setIsSubmitting(true);
     try {
       await verifyEmail(form.email, verification.code);
       setVerification({
@@ -54,6 +72,8 @@ const SignUp = () => {
         error: err.message || "Verification failed. Please try again.",
         state: "failed",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -115,6 +135,7 @@ const SignUp = () => {
             title="Sign Up"
             onPress={onSignUpPress}
             className="mt-6"
+            isLoading={isSubmitting}
           />
           <OAuth />
           <Link
@@ -126,7 +147,7 @@ const SignUp = () => {
           </Link>
         </View>
         <ReactNativeModal
-          isVisible={verification.state === "pending"}
+          isVisible={verification.state === "pending" || verification.state === "failed"}
           onModalHide={() => {
             if (verification.state === "success") {
               setShowSuccessModal(true);
@@ -159,6 +180,7 @@ const SignUp = () => {
               title="Verify Email"
               onPress={onPressVerify}
               className="mt-5 bg-success-500"
+              isLoading={isSubmitting}
             />
           </View>
         </ReactNativeModal>
