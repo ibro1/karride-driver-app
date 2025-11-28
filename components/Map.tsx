@@ -16,7 +16,7 @@ import { useAuth } from "@/lib/auth-context";
 
 const directionsAPI = process.env.EXPO_PUBLIC_DIRECTIONS_API_KEY;
 
-const Map = () => {
+const Map = ({ isOnline }: { isOnline?: boolean }) => {
   const { user } = useAuth();
   const {
     userLongitude,
@@ -26,8 +26,12 @@ const Map = () => {
   } = useLocationStore();
   const { selectedDriver, setDrivers } = useDriverStore();
 
-  const { data: drivers, loading, error } = useFetch<Driver[]>("/api/driver");
+  const { data: drivers, loading, error, refetch } = useFetch<Driver[]>("/api/driver");
   const [markers, setMarkers] = useState<MarkerData[]>([]);
+
+  useEffect(() => {
+    refetch();
+  }, [isOnline]);
 
   useEffect(() => {
     if (Array.isArray(drivers)) {

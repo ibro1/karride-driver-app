@@ -93,7 +93,7 @@ const DriverHome = () => {
     return (
         <View className="flex-1 bg-white">
             <View className="flex-1">
-                <Map />
+                <Map isOnline={isOnline} />
             </View>
 
             <View className="absolute top-14 right-5 z-10">
