@@ -43,9 +43,10 @@ export const signInWithEmail = async (
     console.log("Sign in response data:", data);
 
     // Store session token
-    if (data.session?.token) {
-        console.log("Saving session token:", data.session.token);
-        await SecureStore.setItemAsync("session_token", data.session.token);
+    const token = data.session?.token || data.token;
+    if (token) {
+        console.log("Saving session token:", token);
+        await SecureStore.setItemAsync("session_token", token);
     } else {
         console.log("No session token in sign in response");
     }
@@ -85,9 +86,10 @@ export const signUpWithEmail = async (
     console.log("Sign up response data:", data);
 
     // Store session token if provided
-    if (data.session?.token) {
-        console.log("Saving session token:", data.session.token);
-        await SecureStore.setItemAsync("session_token", data.session.token);
+    const token = data.session?.token || data.token;
+    if (token) {
+        console.log("Saving session token:", token);
+        await SecureStore.setItemAsync("session_token", token);
     } else {
         console.log("No session token in sign up response");
     }
@@ -180,7 +182,7 @@ export const getSession = async (): Promise<any> => {
     }
 
     try {
-        const response = await fetch(`${API_URL}/api/auth/session`, {
+        const response = await fetch(`${API_URL}/api/auth/me`, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
@@ -408,8 +410,9 @@ export const signInWithGoogle = async (idToken: string): Promise<AuthResponse> =
     const data = await response.json();
 
     // Store session token
-    if (data.session?.token) {
-        await SecureStore.setItemAsync("session_token", data.session.token);
+    const token = data.session?.token || data.token;
+    if (token) {
+        await SecureStore.setItemAsync("session_token", token);
     }
 
     return data;

@@ -1,0 +1,66 @@
+import 'dotenv/config';
+
+export default {
+    expo: {
+        name: "CarRide Driver",
+        slug: "carride-driver",
+        version: "1.0.0",
+        orientation: "portrait",
+        icon: "./assets/images/icon.png",
+        scheme: "carride-driver",
+        userInterfaceStyle: "automatic",
+        splash: {
+            image: "./assets/images/splash.png",
+            resizeMode: "contain",
+            backgroundColor: "#2F80ED"
+        },
+        ios: {
+            supportsTablet: true
+        },
+        android: {
+            adaptiveIcon: {
+                foregroundImage: "./assets/images/adaptive-icon.png",
+                backgroundColor: "#ffffff"
+            },
+            package: "com.anonymous.carride.driver",
+            config: {
+                googleMaps: {
+                    apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
+                }
+            }
+        },
+        web: {
+            bundler: "metro",
+            output: "server",
+            favicon: "./assets/images/favicon.png"
+        },
+        plugins: [
+            [
+                "expo-router",
+                {
+                    "origin": "https://carride.ng/"
+                }
+            ],
+            [
+                "expo-build-properties",
+                {
+                    "android": {
+                        "usesCleartextTraffic": true
+                    }
+                }
+            ]
+        ],
+        experiments: {
+            typedRoutes: true
+        },
+        extra: {
+            router: {
+                "origin": "https://carride.ng/"
+            },
+            eas: {
+                projectId: "f192321c-d635-4830-ba1b-8253d8a0ca01"
+            }
+        },
+        owner: "netlinko"
+    }
+};

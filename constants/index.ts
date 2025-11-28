@@ -74,23 +74,23 @@ export const icons = {
 export const onboarding = [
   {
     id: 1,
-    title: "The perfect ride is just a tap away!",
+    title: "Drive with Ryde and Earn!",
     description:
-      "Your journey begins with Ryde. Find your ideal ride effortlessly.",
+      "Turn your car into a money-making machine. Drive when you want.",
     image: images.onboarding1,
   },
   {
     id: 2,
-    title: "Best car in your hands with Ryde",
+    title: "Be Your Own Boss",
     description:
-      "Discover the convenience of finding your perfect ride with Ryde",
+      "Set your own schedule and work on your own terms.",
     image: images.onboarding2,
   },
   {
     id: 3,
-    title: "Your ride, your way. Let's go!",
+    title: "Get Paid Instantly",
     description:
-      "Enter your destination, sit back, and let us take care of the rest.",
+      "Track your earnings and get paid directly to your wallet.",
     image: images.onboarding3,
   },
 ];
