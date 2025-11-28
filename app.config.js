@@ -25,7 +25,7 @@ export default {
             package: "com.anonymous.carride.driver",
             config: {
                 googleMaps: {
-                    apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
+                    apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "REPLACE_WITH_YOUR_GOOGLE_MAPS_API_KEY"
                 }
             }
         },
