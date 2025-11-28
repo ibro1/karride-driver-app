@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { View, Text, ActivityIndicator, Alert, TouchableOpacity, Image } from "react-native";
+import { View, Text, ActivityIndicator, Alert, TouchableOpacity, Image, Switch } from "react-native";
 import { useAuth } from "@/lib/auth-context";
 import * as Location from "expo-location";
 import Map from "@/components/Map";
@@ -42,8 +42,8 @@ const DriverHome = () => {
         const initDriver = async () => {
             if (user) {
                 try {
-                    const profile = await getDriverProfile(user.id);
-                    if (profile && profile.status === 'online') {
+                    const response = await getDriverProfile(user.id);
+                    if (response && response.driver && response.driver.status === 'online') {
                         setIsOnline(true);
                     }
                 } catch (err) {
@@ -103,6 +103,17 @@ const DriverHome = () => {
                 >
                     <Image source={icons.out} className="w-6 h-6" resizeMode="contain" />
                 </TouchableOpacity>
+            </View>
+
+            <View className="absolute top-14 left-5 z-10 bg-white px-4 py-2 rounded-full shadow-md flex-row items-center">
+                <View className={`w-3 h-3 rounded-full mr-2 ${isOnline ? "bg-green-500" : "bg-red-500"}`} />
+                <Text className="font-JakartaSemiBold mr-3">{isOnline ? "Online" : "Offline"}</Text>
+                <Switch
+                    value={isOnline}
+                    onValueChange={toggleOnlineStatus}
+                    trackColor={{ false: "#767577", true: "#34C759" }}
+                    thumbColor={isOnline ? "#FFFFFF" : "#f4f3f4"}
+                />
             </View>
 
             <View className="absolute bottom-10 left-5 right-5">

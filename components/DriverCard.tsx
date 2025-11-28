@@ -9,12 +9,11 @@ const DriverCard = ({ item, selected, setSelected }: DriverCardProps) => {
   return (
     <TouchableOpacity
       onPress={setSelected}
-      className={`${
-        selected === item.id ? "bg-general-600" : "bg-white"
-      } flex flex-row items-center justify-between py-5 px-3 rounded-xl`}
+      className={`${selected === item.id ? "bg-general-600" : "bg-white"
+        } flex flex-row items-center justify-between py-5 px-3 rounded-xl`}
     >
       <Image
-        source={{ uri: item.profile_image_url }}
+        source={item.profileImageUrl ? { uri: item.profileImageUrl } : icons.profile}
         className="w-14 h-14 rounded-full"
       />
 
@@ -32,7 +31,7 @@ const DriverCard = ({ item, selected, setSelected }: DriverCardProps) => {
           <View className="flex flex-row items-center">
             <Image source={icons.dollar} className="w-4 h-4" />
             <Text className="text-sm font-JakartaRegular ml-1">
-              ${item.price}
+              ₦{item.price}
             </Text>
           </View>
 
@@ -49,13 +48,13 @@ const DriverCard = ({ item, selected, setSelected }: DriverCardProps) => {
           </Text>
 
           <Text className="text-sm font-JakartaRegular text-general-800">
-            {item.car_seats} seats
+            {item.carSeats} seats
           </Text>
         </View>
       </View>
 
       <Image
-        source={{ uri: item.car_image_url }}
+        source={item.carImageUrl ? { uri: item.carImageUrl } : icons.marker}
         className="h-14 w-14"
         resizeMode="contain"
       />

@@ -12,10 +12,12 @@ import {
 } from "@/lib/map";
 import { useDriverStore, useLocationStore } from "@/store";
 import { Driver, MarkerData } from "@/types/type";
+import { useAuth } from "@/lib/auth-context";
 
 const directionsAPI = process.env.EXPO_PUBLIC_DIRECTIONS_API_KEY;
 
 const Map = () => {
+  const { user } = useAuth();
   const {
     userLongitude,
     userLatitude,
@@ -32,14 +34,23 @@ const Map = () => {
       if (!userLatitude || !userLongitude) return;
 
       const newMarkers = generateMarkersFromData({
-        data: drivers,
+        data: drivers.map((driver) => {
+          if (driver.userId === user?.id) {
+            return {
+              ...driver,
+              currentLatitude: userLatitude,
+              currentLongitude: userLongitude,
+            };
+          }
+          return driver;
+        }),
         userLatitude,
         userLongitude,
       });
 
       setMarkers(newMarkers);
     }
-  }, [drivers, userLatitude, userLongitude]);
+  }, [drivers, userLatitude, userLongitude, user?.id]);
 
   useEffect(() => {
     if (
@@ -90,6 +101,7 @@ const Map = () => {
       initialRegion={region}
       showsUserLocation={true}
       userInterfaceStyle="light"
+      mapPadding={{ top: 100, right: 20, bottom: 100, left: 20 }}
     >
       {markers.map((marker, index) => (
         <Marker
