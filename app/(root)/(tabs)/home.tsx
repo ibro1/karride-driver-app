@@ -8,6 +8,7 @@ import { updateDriverStatus, updateDriverLocation, getDriverProfile } from "@/li
 import RideRequestSheet from "@/components/RideRequestSheet";
 
 import { useLocationStore } from "@/store";
+import { getSocket } from "@/lib/socket";
 
 const DriverHome = () => {
     const { user, signOut } = useAuth();
@@ -54,6 +55,28 @@ const DriverHome = () => {
         initDriver();
     }, [user]);
 
+    // Periodic location update if online
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+        const socket = getSocket();
+
+        if (isOnline && hasPermission) {
+            interval = setInterval(async () => {
+                const loc = await Location.getCurrentPositionAsync({});
+                setLocation(loc);
+                updateDriverLocation(loc.coords.latitude, loc.coords.longitude);
+
+                // Emit socket update
+                socket.emit("driver_location_broadcast", {
+                    driverId: user?.id,
+                    latitude: loc.coords.latitude,
+                    longitude: loc.coords.longitude,
+                });
+            }, 10000); // Update every 10s
+        }
+        return () => clearInterval(interval);
+    }, [isOnline, hasPermission, user]);
+
     const toggleOnlineStatus = async () => {
         if (!location) {
             Alert.alert("Error", "Location not available");
@@ -67,20 +90,6 @@ const DriverHome = () => {
             Alert.alert("Error", error.message || "Failed to update status");
         }
     };
-
-    // Periodic location update if online
-    useEffect(() => {
-        let interval: NodeJS.Timeout;
-        if (isOnline && hasPermission) {
-            interval = setInterval(async () => {
-                const loc = await Location.getCurrentPositionAsync({});
-                setLocation(loc);
-                updateDriverLocation(loc.coords.latitude, loc.coords.longitude);
-            }, 10000); // Update every 10s
-        }
-        return () => clearInterval(interval);
-    }, [isOnline, hasPermission]);
-
 
     if (loading) {
         return (
