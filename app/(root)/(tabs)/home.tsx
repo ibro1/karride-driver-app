@@ -17,6 +17,7 @@ const DriverHome = () => {
     const [hasPermission, setHasPermission] = useState(false);
     const [isOnline, setIsOnline] = useState(false);
     const [location, setLocation] = useState<Location.LocationObject | null>(null);
+    const [rideRequest, setRideRequest] = useState<any>(null);
 
     useEffect(() => {
         const requestLocation = async () => {
@@ -55,6 +56,21 @@ const DriverHome = () => {
         initDriver();
     }, [user]);
 
+    // Socket listener for ride requests
+    useEffect(() => {
+        const socket = getSocket();
+        if (user?.id) {
+            socket.emit("join_driver_room", user.id);
+
+            socket.on("new_ride_request", (data) => {
+                setRideRequest(data);
+            });
+        }
+        return () => {
+            socket.off("new_ride_request");
+        }
+    }, [user]);
+
     // Periodic location update if online
     useEffect(() => {
         let interval: NodeJS.Timeout;
@@ -89,6 +105,18 @@ const DriverHome = () => {
         } catch (error: any) {
             Alert.alert("Error", error.message || "Failed to update status");
         }
+    };
+
+    const handleAcceptRide = () => {
+        // Logic to accept ride (API call + socket emit)
+        // For now just close sheet and navigate
+        setRideRequest(null);
+        // router.push(`/(root)/ride/${rideRequest.rideId}`);
+        Alert.alert("Success", "Ride Accepted!");
+    };
+
+    const handleDeclineRide = () => {
+        setRideRequest(null);
     };
 
     if (loading) {
@@ -136,8 +164,11 @@ const DriverHome = () => {
                 </TouchableOpacity>
             </View>
 
-            {/* Placeholder for Ride Request Sheet - logic to be added */}
-            {/* <RideRequestSheet /> */}
+            <RideRequestSheet
+                request={rideRequest}
+                onAccept={handleAcceptRide}
+                onDecline={handleDeclineRide}
+            />
         </View>
     );
 };
