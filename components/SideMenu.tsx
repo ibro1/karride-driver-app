@@ -4,6 +4,7 @@ import Modal from "react-native-modal";
 import { router } from "expo-router";
 import { icons } from "@/constants";
 import { useUser } from "@/lib/auth-context";
+import Avatar from "@/components/Avatar";
 
 interface SideMenuProps {
   isVisible: boolean;
@@ -26,9 +27,9 @@ const SideMenu = ({ isVisible, onClose }: SideMenuProps) => {
   };
 
   const handleLogout = async () => {
-      onClose();
-      await logout();
-      router.replace("/(auth)/sign-in");
+    onClose();
+    await logout();
+    router.replace("/(auth)/sign-in");
   }
 
   return (
@@ -44,9 +45,11 @@ const SideMenu = ({ isVisible, onClose }: SideMenuProps) => {
       <View className="bg-white h-full w-[75%] p-5 pt-16">
         {/* Header */}
         <View className="flex-row items-center mb-10">
-          <Image
-            source={{ uri: user?.image || "https://via.placeholder.com/150" }}
-            className="w-16 h-16 rounded-full border-2 border-primary-500"
+          <Avatar
+            source={user?.image}
+            name={user?.name || "Driver"}
+            size={16}
+            className="border-2 border-primary-500"
           />
           <View className="ml-4">
             <Text className="text-lg font-JakartaBold text-neutral-800">
@@ -82,7 +85,7 @@ const SideMenu = ({ isVisible, onClose }: SideMenuProps) => {
           onPress={handleLogout}
           className="flex-row items-center py-4 mt-auto mb-10"
         >
-            <Image source={icons.out} className="w-6 h-6 mr-4" resizeMode="contain" tintColor="#EF4444" />
+          <Image source={icons.out} className="w-6 h-6 mr-4" resizeMode="contain" tintColor="#EF4444" />
           <Text className="text-base font-JakartaBold text-red-500">
             Log Out
           </Text>

@@ -24,6 +24,7 @@ const DriverHome = () => {
     const [rideRequest, setRideRequest] = useState<any>(null);
     const [acceptingRide, setAcceptingRide] = useState(false);
     const [isMenuVisible, setMenuVisible] = useState(false);
+    const [isTogglingStatus, setIsTogglingStatus] = useState(false);
 
     const { data: earningsData, refetch: refetchEarnings } = useFetch<any>(`/api/driver/${user?.id}/earnings`);
 
@@ -129,12 +130,15 @@ const DriverHome = () => {
             Alert.alert("Error", "Location not available");
             return;
         }
+        setIsTogglingStatus(true);
         try {
             const newStatus = isOnline ? "offline" : "online";
             await updateDriverStatus(newStatus, location.coords.latitude, location.coords.longitude);
             setIsOnline(!isOnline);
         } catch (error: any) {
             Alert.alert("Error", error.message || "Failed to update status");
+        } finally {
+            setIsTogglingStatus(false);
         }
     };
 
@@ -189,17 +193,21 @@ const DriverHome = () => {
                     <Image source={icons.list} className="w-6 h-6" resizeMode="contain" tintColor="black" />
                 </TouchableOpacity>
 
-                {/* Online Toggle (Centered) */}
-                <View className="bg-white px-4 py-2 rounded-full shadow-md flex-row items-center pointer-events-auto">
-                    <View className={`w-3 h-3 rounded-full mr-2 ${isOnline ? "bg-green-500" : "bg-red-500"}`} />
-                    <Text className="font-JakartaSemiBold mr-3">{isOnline ? "Online" : "Offline"}</Text>
-                    <Switch
-                        value={isOnline}
-                        onValueChange={toggleOnlineStatus}
-                        trackColor={{ false: "#767577", true: "#34C759" }}
-                        thumbColor={isOnline ? "#FFFFFF" : "#f4f3f4"}
-                    />
-                </View>
+                {/* Online Toggle (Centered Button) */}
+                <TouchableOpacity
+                    onPress={toggleOnlineStatus}
+                    disabled={isTogglingStatus}
+                    className={`flex-row items-center justify-center rounded-full px-6 py-3 shadow-md pointer-events-auto ${isOnline ? "bg-green-500" : "bg-orange-500"} ${isTogglingStatus ? "opacity-70" : ""}`}
+                >
+                    {isTogglingStatus ? (
+                        <ActivityIndicator size="small" color="#fff" className="mr-2" />
+                    ) : (
+                        <View className="w-2 h-2 rounded-full bg-white mr-2" />
+                    )}
+                    <Text className="text-white font-JakartaBold text-sm">
+                        {isTogglingStatus ? "Updating..." : (isOnline ? "Go Offline" : "Go Online")}
+                    </Text>
+                </TouchableOpacity>
 
                 {/* Empty View for Balance */}
                 <View className="w-12" />
@@ -216,15 +224,6 @@ const DriverHome = () => {
                     earnings={earningsData?.today_earnings || 0}
                     ridesCount={earningsData?.today_rides || 0}
                 />
-
-                {!isOnline && (
-                    <TouchableOpacity
-                        onPress={toggleOnlineStatus}
-                        className="mx-5 bg-green-500 p-4 rounded-full shadow-lg flex-row justify-center items-center mb-2"
-                    >
-                        <Text className="text-white font-bold text-lg">Go Online</Text>
-                    </TouchableOpacity>
-                )}
             </View>
 
             <RideRequestSheet
