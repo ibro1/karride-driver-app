@@ -7,9 +7,12 @@ import { icons } from "@/constants";
 import { updateDriverStatus, updateDriverLocation, getDriverProfile, acceptRide } from "@/lib/auth-api";
 import RideRequestSheet from "@/components/RideRequestSheet";
 import { router } from "expo-router";
+import { useFetch } from "@/lib/fetch";
 
 import { useLocationStore } from "@/store";
 import { getSocket } from "@/lib/socket";
+import SideMenu from "@/components/SideMenu";
+import EarningsWidget from "@/components/EarningsWidget";
 
 const DriverHome = () => {
     const { user, signOut } = useAuth();
@@ -20,6 +23,9 @@ const DriverHome = () => {
     const [location, setLocation] = useState<Location.LocationObject | null>(null);
     const [rideRequest, setRideRequest] = useState<any>(null);
     const [acceptingRide, setAcceptingRide] = useState(false);
+    const [isMenuVisible, setMenuVisible] = useState(false);
+
+    const { data: earningsData, refetch: refetchEarnings } = useFetch<any>(`/api/driver/${user?.id}/earnings`);
 
     useEffect(() => {
         const requestLocation = async () => {
@@ -34,7 +40,7 @@ const DriverHome = () => {
             setUserLocation({
                 latitude: location.coords.latitude,
                 longitude: location.coords.longitude,
-                address: "Current Location", // You might want to reverse geocode this
+                address: "Current Location",
             });
             setLoading(false);
         };
@@ -47,7 +53,6 @@ const DriverHome = () => {
             if (user) {
                 try {
                     const response = await getDriverProfile(user.id);
-                    console.log("Driver Profile Response:", JSON.stringify(response, null, 2));
 
                     if (response && response.driver) {
                         const driverId = response.driver.id;
@@ -60,22 +65,18 @@ const DriverHome = () => {
                         // 2. Setup Socket
                         const socket = getSocket();
                         socket.emit("join_driver_room", driverId);
-                        console.log("Joined driver room:", driverId);
 
                         socket.on("new_ride_request", (data) => {
-                            console.log("New ride request received:", data);
                             setRideRequest(data);
                         });
 
                         // 3. Check for pending request
                         if (response.pendingRequest) {
-                            console.log("Found pending request:", response.pendingRequest);
                             setRideRequest(response.pendingRequest);
                         }
 
                         // 4. Redirect if active ride
                         if (response.activeRide) {
-                            console.log("Resuming active ride:", response.activeRide.rideId);
                             router.replace(`/(root)/ride/${response.activeRide.rideId}`);
                         }
                     }
@@ -114,6 +115,14 @@ const DriverHome = () => {
         }
         return () => clearInterval(interval);
     }, [isOnline, hasPermission, user]);
+
+    // Refetch earnings when screen comes into focus or periodically
+    useEffect(() => {
+        if (isOnline) {
+            refetchEarnings();
+        }
+    }, [isOnline]);
+
 
     const toggleOnlineStatus = async () => {
         if (!location) {
@@ -168,39 +177,54 @@ const DriverHome = () => {
 
     return (
         <View className="flex-1 bg-white">
+            <SideMenu isVisible={isMenuVisible} onClose={() => setMenuVisible(false)} />
+
+            {/* Header */}
+            <View className="absolute top-14 left-0 right-0 z-10 flex-row justify-between items-center px-5 pointer-events-none">
+                {/* Hamburger Menu */}
+                <TouchableOpacity
+                    onPress={() => setMenuVisible(true)}
+                    className="bg-white p-3 rounded-full shadow-md pointer-events-auto"
+                >
+                    <Image source={icons.list} className="w-6 h-6" resizeMode="contain" tintColor="black" />
+                </TouchableOpacity>
+
+                {/* Online Toggle (Centered) */}
+                <View className="bg-white px-4 py-2 rounded-full shadow-md flex-row items-center pointer-events-auto">
+                    <View className={`w-3 h-3 rounded-full mr-2 ${isOnline ? "bg-green-500" : "bg-red-500"}`} />
+                    <Text className="font-JakartaSemiBold mr-3">{isOnline ? "Online" : "Offline"}</Text>
+                    <Switch
+                        value={isOnline}
+                        onValueChange={toggleOnlineStatus}
+                        trackColor={{ false: "#767577", true: "#34C759" }}
+                        thumbColor={isOnline ? "#FFFFFF" : "#f4f3f4"}
+                    />
+                </View>
+
+                {/* Empty View for Balance */}
+                <View className="w-12" />
+            </View>
+
+            {/* Map Section */}
             <View className="flex-1">
                 <Map isOnline={isOnline} />
             </View>
 
-            <View className="absolute top-14 right-5 z-10">
-                <TouchableOpacity
-                    onPress={signOut}
-                    className="bg-white p-3 rounded-full shadow-md"
-                >
-                    <Image source={icons.out} className="w-6 h-6" resizeMode="contain" />
-                </TouchableOpacity>
-            </View>
-
-            <View className="absolute top-14 left-5 z-10 bg-white px-4 py-2 rounded-full shadow-md flex-row items-center">
-                <View className={`w-3 h-3 rounded-full mr-2 ${isOnline ? "bg-green-500" : "bg-red-500"}`} />
-                <Text className="font-JakartaSemiBold mr-3">{isOnline ? "Online" : "Offline"}</Text>
-                <Switch
-                    value={isOnline}
-                    onValueChange={toggleOnlineStatus}
-                    trackColor={{ false: "#767577", true: "#34C759" }}
-                    thumbColor={isOnline ? "#FFFFFF" : "#f4f3f4"}
+            {/* Bottom Widget */}
+            <View className="bg-white pt-2 pb-[100px]">
+                <EarningsWidget
+                    earnings={earningsData?.today_earnings || 0}
+                    ridesCount={earningsData?.today_rides || 0}
                 />
-            </View>
 
-            <View className="absolute bottom-10 left-5 right-5">
-                <TouchableOpacity
-                    onPress={toggleOnlineStatus}
-                    className={`w-full p-4 rounded-full shadow-lg flex-row justify-center items-center ${isOnline ? "bg-red-500" : "bg-green-500"}`}
-                >
-                    <Text className="text-white font-bold text-lg">
-                        {isOnline ? "Go Offline" : "Go Online"}
-                    </Text>
-                </TouchableOpacity>
+                {!isOnline && (
+                    <TouchableOpacity
+                        onPress={toggleOnlineStatus}
+                        className="mx-5 bg-green-500 p-4 rounded-full shadow-lg flex-row justify-center items-center mb-2"
+                    >
+                        <Text className="text-white font-bold text-lg">Go Online</Text>
+                    </TouchableOpacity>
+                )}
             </View>
 
             <RideRequestSheet
