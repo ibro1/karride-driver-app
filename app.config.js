@@ -45,7 +45,9 @@ export default {
                 "expo-build-properties",
                 {
                     "android": {
-                        "usesCleartextTraffic": true
+                        "usesCleartextTraffic": true,
+                        "kotlinVersion": "1.9.0"
+
                     }
                 }
             ]

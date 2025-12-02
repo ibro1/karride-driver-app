@@ -1,10 +1,11 @@
 import { useUser } from "@/lib/auth-context";
-import { Image, ScrollView, Text, View, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
+import { Image, ScrollView, Text, View, TouchableOpacity, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { icons } from "@/constants";
 import { router } from "expo-router";
 import Avatar from "@/components/Avatar";
 import { useFetch } from "@/lib/fetch";
+import Skeleton from "@/components/Skeleton";
 
 const Profile = () => {
   const { user, logout } = useUser();
@@ -23,14 +24,6 @@ const Profile = () => {
       },
     ]);
   };
-
-  if (loading) {
-    return (
-      <View className="flex-1 justify-center items-center bg-white">
-        <ActivityIndicator size="large" color="#0286FF" />
-      </View>
-    );
-  }
 
   const driver = profileData?.driver;
   const vehicle = profileData?.vehicle;
@@ -67,8 +60,14 @@ const Profile = () => {
           <View className="flex-row items-center bg-neutral-100 px-3 py-1 rounded-full">
             <Image source={icons.star} className="w-4 h-4 mr-1" />
             <Text className="text-sm font-JakartaBold text-neutral-800">
-              {driver?.rating?.toFixed(1) || "5.0"}
-              <Text className="text-neutral-500 font-JakartaRegular"> ({driver?.ratingCount || 0} reviews)</Text>
+              {loading ? (
+                <Text>...</Text>
+              ) : (
+                <>
+                  {driver?.rating?.toFixed(1) || "5.0"}
+                  <Text className="text-neutral-500 font-JakartaRegular"> ({driver?.ratingCount || 0} reviews)</Text>
+                </>
+              )}
             </Text>
           </View>
         </View>
@@ -81,19 +80,31 @@ const Profile = () => {
               <Image source={icons.dollar} className="w-4 h-4" tintColor="white" resizeMode="contain" />
             </View>
           </View>
-          <Text className="text-3xl font-JakartaBold text-white">
-            ₦{driver?.walletBalance?.toFixed(2) || "0.00"}
-          </Text>
+          {loading ? (
+            <Skeleton width={150} height={40} style={{ backgroundColor: 'rgba(255,255,255,0.2)' }} />
+          ) : (
+            <Text className="text-3xl font-JakartaBold text-white">
+              ₦{driver?.walletBalance?.toFixed(2) || "0.00"}
+            </Text>
+          )}
         </View>
 
         {/* Stats Grid */}
         <View className="flex-row justify-between mb-6">
           <View className="bg-neutral-50 p-4 rounded-2xl flex-1 mr-2 items-center">
-            <Text className="text-2xl font-JakartaBold text-primary-500">{stats?.totalRides || 0}</Text>
+            {loading ? (
+              <Skeleton width={40} height={30} style={{ marginBottom: 4 }} />
+            ) : (
+              <Text className="text-2xl font-JakartaBold text-primary-500">{stats?.totalRides || 0}</Text>
+            )}
             <Text className="text-xs text-neutral-500 font-JakartaMedium mt-1">Total Rides</Text>
           </View>
           <View className="bg-neutral-50 p-4 rounded-2xl flex-1 ml-2 items-center">
-            <Text className="text-2xl font-JakartaBold text-green-500">{stats?.yearsActive || 1}</Text>
+            {loading ? (
+              <Skeleton width={40} height={30} style={{ marginBottom: 4 }} />
+            ) : (
+              <Text className="text-2xl font-JakartaBold text-green-500">{stats?.yearsActive || 1}</Text>
+            )}
             <Text className="text-xs text-neutral-500 font-JakartaMedium mt-1">Years Active</Text>
           </View>
         </View>
@@ -112,12 +123,21 @@ const Profile = () => {
               <Image source={icons.list} className="w-6 h-6" resizeMode="contain" tintColor="#0286FF" />
             </View>
             <View>
-              <Text className="text-base font-JakartaBold text-neutral-800">
-                {vehicle?.make} {vehicle?.model}
-              </Text>
-              <Text className="text-sm text-neutral-500">
-                {vehicle?.plateNumber} • {vehicle?.color}
-              </Text>
+              {loading ? (
+                <>
+                  <Skeleton width={120} height={20} style={{ marginBottom: 6 }} />
+                  <Skeleton width={180} height={16} />
+                </>
+              ) : (
+                <>
+                  <Text className="text-base font-JakartaBold text-neutral-800">
+                    {vehicle?.make} {vehicle?.model}
+                  </Text>
+                  <Text className="text-sm text-neutral-500">
+                    {vehicle?.plateNumber} • {vehicle?.color}
+                  </Text>
+                </>
+              )}
             </View>
           </View>
         </View>
