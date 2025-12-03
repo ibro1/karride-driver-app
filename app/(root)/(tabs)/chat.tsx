@@ -1,53 +1,42 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { View, Text, TouchableOpacity, Image, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
 
 import { useUser } from "@/lib/auth-context";
-import { getDriverProfile } from "@/lib/auth-api";
 import { icons, images } from "@/constants";
+import { useFetch } from "@/lib/fetch";
 
-interface ActiveRide {
-  rideId: number;
-  riderName?: string;
-  riderImage?: string;
+interface Ride {
+  ride_id: number;
+  rider: {
+    id: string;
+    name: string;
+    email: string;
+    image?: string;
+  };
+  status: string;
 }
 
 const Chat = () => {
   const { user } = useUser();
-  const [activeRide, setActiveRide] = useState<ActiveRide | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [activeRide, setActiveRide] = useState<Ride | null>(null);
 
-  const checkActiveRide = useCallback(async () => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
+  // Fetch driver's active ride
+  const { data: activeRideData, loading, refetch } = useFetch<{ data: Ride }>(`/api/ride/active`);
 
-    setLoading(true);
-    try {
-      const response = await getDriverProfile(user.id);
-      if (response?.activeRide) {
-        setActiveRide({
-          rideId: response.activeRide.rideId,
-          riderName: response.activeRide.riderName,
-          riderImage: response.activeRide.riderImage,
-        });
-      } else {
-        setActiveRide(null);
-      }
-    } catch (error) {
-      console.error("Error fetching driver profile:", error);
+  useEffect(() => {
+    if (activeRideData?.data) {
+      setActiveRide(activeRideData.data);
+    } else {
       setActiveRide(null);
-    } finally {
-      setLoading(false);
     }
-  }, [user]);
+  }, [activeRideData]);
 
   useFocusEffect(
     useCallback(() => {
-      checkActiveRide();
-    }, [checkActiveRide])
+      refetch();
+    }, [refetch])
   );
 
   if (loading) {
@@ -82,18 +71,18 @@ const Chat = () => {
       ) : (
         <TouchableOpacity
           className="flex-row items-center p-4 border-b border-gray-100 active:bg-gray-50"
-          onPress={() => router.push(`/(root)/chat/${activeRide.rideId}` as any)}
+          onPress={() => router.push(`/(root)/chat/${activeRide.ride_id}` as any)}
         >
           <View className="w-12 h-12 bg-gray-200 rounded-full items-center justify-center mr-4">
-            {activeRide.riderImage ? (
+            {activeRide.rider?.image ? (
               <Image
-                source={{ uri: activeRide.riderImage }}
+                source={{ uri: activeRide.rider.image }}
                 className="w-12 h-12 rounded-full"
                 resizeMode="cover"
               />
             ) : (
               <Image
-                source={icons.profile}
+                source={icons.person}
                 className="w-6 h-6"
                 tintColor="#6B7280"
                 resizeMode="contain"
@@ -103,7 +92,7 @@ const Chat = () => {
           <View className="flex-1">
             <View className="flex-row justify-between items-center">
               <Text className="text-lg font-JakartaSemiBold">
-                {activeRide.riderName || "Rider"}
+                {activeRide.rider?.name || "Rider"}
               </Text>
               <View className="bg-green-100 px-2 py-1 rounded-full">
                 <Text className="text-xs text-green-600 font-JakartaMedium">Active</Text>
