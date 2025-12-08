@@ -19,6 +19,7 @@ const EditVehicle = () => {
         year: "",
         color: "",
         plateNumber: "",
+        carSeats: "",
     });
     const [carImage, setCarImage] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -33,6 +34,7 @@ const EditVehicle = () => {
                 year: profileData.vehicle.year?.toString() || "",
                 color: profileData.vehicle.color || "",
                 plateNumber: profileData.vehicle.plateNumber || "",
+                carSeats: profileData.vehicle.seats?.toString() || "",
             });
             setCarImage(profileData.vehicle.carImageUrl || null);
         }
@@ -59,7 +61,7 @@ const EditVehicle = () => {
     };
 
     const handleUpdate = async () => {
-        if (!form.make || !form.model || !form.year || !form.color || !form.plateNumber) {
+        if (!form.make || !form.model || !form.year || !form.color || !form.plateNumber || !form.carSeats) {
             Alert.alert("Error", "Please fill in all fields");
             return;
         }
@@ -96,6 +98,7 @@ const EditVehicle = () => {
                 body: JSON.stringify({
                     ...form,
                     year: parseInt(form.year),
+                    carSeats: parseInt(form.carSeats),
                     carImageUrl,
                 }),
             });
@@ -206,6 +209,14 @@ const EditVehicle = () => {
                     editable={!isSubmitting}
                 />
 
+                <InputField
+                    label="Car Seats"
+                    placeholder="e.g. 4"
+                    value={form.carSeats}
+                    onChangeText={(text) => setForm({ ...form, carSeats: text })}
+                    keyboardType="numeric"
+                    editable={!isSubmitting}
+                />
 
                 <CustomButton
                     title="Save Changes"
