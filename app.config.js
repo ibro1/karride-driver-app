@@ -11,12 +11,17 @@ export default {
         scheme: "karride-driver",
         userInterfaceStyle: "automatic",
         splash: {
-            image: "./assets/icons/splash.png",
+            image: "./assets/icons/splash-icon.png",
             resizeMode: "contain",
             backgroundColor: "#020402"
         },
+        updates: {
+            url: "https://u.expo.dev/bb5677ce-a44c-4a45-8071-ca1673c4a918",
+            fallbackToCacheTimeout: 0
+        },
         ios: {
             supportsTablet: true,
+            bundleIdentifier: "ng.karride.driver",
             icons: {
                 dark: "./assets/icons/ios-dark.png",
                 light: "./assets/icons/ios-dark.png"

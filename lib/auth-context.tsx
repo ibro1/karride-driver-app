@@ -29,6 +29,8 @@ interface AuthContextType {
         password: string,
         name: string,
         gender: boolean,
+        phoneNumber: string,
+        city: string,
     ) => Promise<void>;
     signOut: () => Promise<void>;
     verifyEmail: (email: string, code: string) => Promise<void>;
@@ -80,9 +82,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         password: string,
         name: string,
         gender: boolean,
+        phoneNumber: string,
+        city: string,
     ) => {
         try {
-            const response = await signUpWithEmail(email, password, name, gender);
+            const response = await signUpWithEmail(email, password, name, gender, phoneNumber, city);
             // Don't set user yet - wait for email verification
             // setUser(response.user);
         } catch (error) {

@@ -74,7 +74,7 @@ export const icons = {
 export const onboarding = [
   {
     id: 1,
-    title: "Drive with Ryde and Earn!",
+    title: "Drive with Karride and Earn!",
     description:
       "Turn your car into a money-making machine. Drive when you want.",
     image: images.onboarding1,

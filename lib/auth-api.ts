@@ -10,10 +10,23 @@ interface AuthResponse {
     };
 }
 
-interface ErrorResponse {
-    error: string;
-    message?: string;
-}
+const handleResponse = async (response: Response, defaultMessage: string) => {
+    if (!response.ok) {
+        if (response.status === 500) {
+            throw new Error("Internal Server Error. Please try again later.");
+        }
+        try {
+            const error: ErrorResponse = await response.json();
+            throw new Error(error.message || error.error || defaultMessage);
+        } catch (e: any) {
+            if (e.message && e.message !== defaultMessage && !e.message.startsWith("JSON Parse")) {
+                throw e;
+            }
+            throw new Error(defaultMessage);
+        }
+    }
+    return response.json();
+};
 
 /**
  * Sign in with email and password
@@ -34,12 +47,7 @@ export const signInWithEmail = async (
         }),
     });
 
-    if (!response.ok) {
-        const error: ErrorResponse = await response.json();
-        throw new Error(error.message || error.error || "Sign in failed");
-    }
-
-    const data = await response.json();
+    const data = await handleResponse(response, "Sign in failed");
     console.log("Sign in response data:", data);
 
     // Store session token
@@ -62,6 +70,8 @@ export const signUpWithEmail = async (
     password: string,
     name: string,
     gender: boolean,
+    phoneNumber: string,
+    city: string,
 ): Promise<AuthResponse> => {
     const response = await fetch(`${API_URL}/api/auth/sign-up/email`, {
         method: "POST",
@@ -74,15 +84,14 @@ export const signUpWithEmail = async (
             password,
             name,
             gender,
+            phoneNumber,
+            city,
         }),
     });
 
-    if (!response.ok) {
-        const error: ErrorResponse = await response.json();
-        throw new Error(error.message || error.error || "Sign up failed");
-    }
+    const data = await handleResponse(response, "Sign up failed");
 
-    const data = await response.json();
+
     console.log("Sign up response data:", data);
 
     // Store session token if provided
@@ -113,12 +122,9 @@ export const verifyEmail = async (email: string, code: string): Promise<any> => 
         }),
     });
 
-    if (!response.ok) {
-        const error: ErrorResponse = await response.json();
-        throw new Error(error.message || error.error || "Verification failed");
-    }
+    return await handleResponse(response, "Verification failed");
 
-    return await response.json();
+
 };
 
 /**
@@ -137,12 +143,9 @@ export const sendVerificationCode = async (email: string): Promise<any> => {
         }),
     });
 
-    if (!response.ok) {
-        const error: ErrorResponse = await response.json();
-        throw new Error(error.message || error.error || "Failed to send verification code");
-    }
+    return await handleResponse(response, "Failed to send verification code");
 
-    return await response.json();
+
 };
 
 /**
@@ -247,12 +250,9 @@ export const registerDriver = async (
         }),
     });
 
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || error.error || "Failed to register driver");
-    }
+    return await handleResponse(response, "Failed to register driver");
 
-    return await response.json();
+
 };
 
 /**
@@ -301,11 +301,7 @@ export const updateDriverStatus = async (
         }),
     });
 
-    if (!response.ok) {
-        throw new Error("Failed to update status");
-    }
-
-    return await response.json();
+    return await handleResponse(response, "Failed to update status");
 };
 
 /**
@@ -350,12 +346,7 @@ export const acceptRide = async (rideId: number): Promise<any> => {
         },
     });
 
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || error.error || "Failed to accept ride");
-    }
-
-    return await response.json();
+    return await handleResponse(response, "Failed to accept ride");
 };
 
 /**
@@ -379,12 +370,7 @@ export const updateRideStatus = async (
         }),
     });
 
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || error.error || "Failed to update ride status");
-    }
-
-    return await response.json();
+    return await handleResponse(response, "Failed to update ride status");
 };
 
 /**
@@ -402,12 +388,9 @@ export const signInWithGoogle = async (idToken: string): Promise<AuthResponse> =
         }),
     });
 
-    if (!response.ok) {
-        const error: ErrorResponse = await response.json();
-        throw new Error(error.message || error.error || "Google sign in failed");
-    }
+    const data = await handleResponse(response, "Google sign in failed");
 
-    const data = await response.json();
+
 
     // Store session token
     const token = data.session?.token || data.token;

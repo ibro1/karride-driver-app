@@ -19,6 +19,8 @@ const SignUp = () => {
     email: "",
     password: "",
     gender: false, // false = male, true = female
+    phoneNumber: "",
+    city: "",
   });
   const [verification, setVerification] = useState({
     state: "default",
@@ -30,7 +32,7 @@ const SignUp = () => {
     if (!isLoaded) return;
     setIsSubmitting(true);
     try {
-      await signUp(form.email, form.password, form.name, form.gender);
+      await signUp(form.email, form.password, form.name, form.gender, form.phoneNumber, form.city);
       setVerification({
         ...verification,
         state: "pending",
@@ -110,6 +112,21 @@ const SignUp = () => {
             textContentType="password"
             value={form.password}
             onChangeText={(value) => setForm({ ...form, password: value })}
+          />
+          <InputField
+            label="Phone Number"
+            placeholder="Enter phone number"
+            icon={icons.person}
+            value={form.phoneNumber}
+            keyboardType="phone-pad"
+            onChangeText={(value) => setForm({ ...form, phoneNumber: value })}
+          />
+          <InputField
+            label="City"
+            placeholder="Enter city"
+            icon={icons.person}
+            value={form.city}
+            onChangeText={(value) => setForm({ ...form, city: value })}
           />
 
           {/* Gender Selection */}
