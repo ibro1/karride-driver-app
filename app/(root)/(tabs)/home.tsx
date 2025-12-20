@@ -54,6 +54,7 @@ const DriverHome = () => {
             if (user) {
                 try {
                     const response = await getDriverProfile(user.id);
+                    console.log("Driver Profile Response:", JSON.stringify(response, null, 2));
 
                     if (response && response.driver) {
                         const driverId = response.driver.id;
