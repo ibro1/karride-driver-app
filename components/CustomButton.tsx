@@ -1,19 +1,20 @@
 import { TouchableOpacity, Text, ActivityIndicator } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 
 import { ButtonProps } from "@/types/type";
 
 const getBgVariantStyle = (variant: ButtonProps["bgVariant"]) => {
   switch (variant) {
     case "secondary":
-      return "bg-gray-500";
+      return "bg-secondary-500";
     case "danger":
-      return "bg-red-500";
+      return "bg-danger-500";
     case "success":
-      return "bg-green-500";
+      return "bg-success-500";
     case "outline":
       return "bg-transparent border-neutral-300 border-[0.5px]";
     default:
-      return "bg-[#0286FF]";
+      return "bg-primary-500";
   }
 };
 
@@ -47,15 +48,34 @@ const CustomButton = ({
   return (
     <TouchableOpacity
       onPress={onPress}
-      className={`w-full rounded-full p-3 flex flex-row justify-center items-center shadow-md shadow-neutral-400/70 ${getBgVariantStyle(bgVariant)} ${className} ${isLoading ? "opacity-50" : ""}`}
+      className={`w-full rounded-full flex flex-row justify-center items-center shadow-md shadow-neutral-400/70 ${className} ${isLoading ? "opacity-50" : ""} ${bgVariant !== "primary" ? getBgVariantStyle(bgVariant) : ""}`}
       disabled={isLoading}
       {...props}
     >
-      {IconLeft && <IconLeft />}
-      <Text className={`text-lg font-bold ${getTextVariantStyle(textVariant)}`}>
-        {isLoading ? loadingText : title}
-      </Text>
-      {IconRight && <IconRight />}
+      {bgVariant === "primary" ? (
+        <LinearGradient
+          colors={["#9D00FF", "#5E0099"]}
+          className="w-full flex flex-row items-center justify-center p-3 rounded-full"
+        >
+          {IconLeft && <IconLeft />}
+          <Text
+            className={`text-lg font-bold ${getTextVariantStyle(textVariant)}`}
+          >
+            {isLoading ? loadingText : title}
+          </Text>
+          {IconRight && <IconRight />}
+        </LinearGradient>
+      ) : (
+        <>
+          {IconLeft && <IconLeft />}
+          <Text
+            className={`text-lg font-bold ${getTextVariantStyle(textVariant)} p-3`}
+          >
+            {isLoading ? loadingText : title}
+          </Text>
+          {IconRight && <IconRight />}
+        </>
+      )}
     </TouchableOpacity>
   );
 };
