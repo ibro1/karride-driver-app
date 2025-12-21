@@ -1,5 +1,5 @@
 import { useUser } from "@/lib/auth-context";
-import { Image, ScrollView, Text, View, TouchableOpacity, Alert } from "react-native";
+import { Image, ScrollView, Text, View, TouchableOpacity, Alert, Linking } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { icons } from "@/constants";
 import { router } from "expo-router";
@@ -142,10 +142,47 @@ const Profile = () => {
           </View>
         </View>
 
+        {/* Edit Profile Action */}
+        <View className="bg-white border border-neutral-100 rounded-2xl overflow-hidden shadow-sm mb-6">
+          <TouchableOpacity
+            onPress={() => router.push("/(root)/edit-profile")}
+            className="flex-row items-center p-4"
+          >
+            <View className="w-8 h-8 bg-neutral-50 rounded-full items-center justify-center mr-3">
+              <Image source={icons.person} className="w-4 h-4" resizeMode="contain" tintColor="#333" />
+            </View>
+            <Text className="text-base font-JakartaMedium text-neutral-800 flex-1">Edit Profile</Text>
+            <Image source={icons.arrowDown} className="w-4 h-4 -rotate-90" tintColor="#C4C4C4" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Compliance & Legal */}
+        <View className="mb-6">
+          <Text className="text-lg font-JakartaBold text-neutral-800 mb-3 ml-1">Legal & Compliance</Text>
+          <View className="bg-white border border-neutral-100 rounded-2xl overflow-hidden shadow-sm">
+            {[
+              { icon: icons.lock, label: "Privacy Policy", url: "https://karride.ng/privacy-policy" },
+              { icon: icons.check, label: "Terms of Service", url: "https://karride.ng/terms-of-service" },
+            ].map((item, index) => (
+              <TouchableOpacity
+                key={index}
+                // Linking is imported from react-native but not in the original import list top of file
+                onPress={() => Linking.openURL(item.url)}
+                className="flex-row items-center p-4 border-b border-neutral-100 last:border-b-0"
+              >
+                <View className="w-8 h-8 bg-neutral-50 rounded-full items-center justify-center mr-3">
+                  <Image source={item.icon} className="w-4 h-4" resizeMode="contain" tintColor="#333" />
+                </View>
+                <Text className="text-base font-JakartaMedium text-neutral-800 flex-1">{item.label}</Text>
+                <Image source={icons.arrowDown} className="w-4 h-4 -rotate-90" tintColor="#C4C4C4" />
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
         {/* Account Actions */}
         <View className="bg-white border border-neutral-100 rounded-2xl overflow-hidden shadow-sm">
           {[
-            { icon: icons.person, label: "Edit Profile", route: "/(root)/edit-profile" },
             { icon: icons.chat, label: "Support & Help", route: "/(root)/(tabs)/chat" },
           ].map((item, index) => (
             <TouchableOpacity
