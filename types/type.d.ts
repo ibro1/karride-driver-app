@@ -65,6 +65,8 @@ declare interface Ride {
     rating: string;
     phone_number: string;
   };
+  driver_rating?: number;
+  user_rating?: number;
 }
 
 declare interface ButtonProps extends TouchableOpacityProps {

@@ -10,13 +10,23 @@ const DriverRideHistoryDetails = () => {
     const { id } = useLocalSearchParams();
     const { data: ride, loading, error } = useFetch<Ride>(`/api/rides/${id}`);
 
-    if (loading || !ride) {
+    if (loading) {
         return (
             <SafeAreaView className="flex-1 bg-white justify-center items-center">
                 <ActivityIndicator size="large" color="#0286FF" />
             </SafeAreaView>
         );
     }
+
+    if (!ride) {
+        return (
+            <SafeAreaView className="flex-1 bg-white justify-center items-center">
+                <Text>Error: Ride not found</Text>
+            </SafeAreaView>
+        );
+    }
+
+    console.log("RIDE_DATA:", JSON.stringify(ride, null, 2));
 
     return (
         <SafeAreaView className="flex-1 bg-white">
@@ -60,7 +70,7 @@ const DriverRideHistoryDetails = () => {
                     </View>
                     <View className="flex-row items-center justify-between">
                         <Text className="text-gray-500 font-JakartaMedium">Distance</Text>
-                        {ride.ride_distance ? (
+                        {ride.ride_distance != null ? (
                             <Text className="font-JakartaBold">{ride.ride_distance.toFixed(1)} km</Text>
                         ) : (
                             <Text className="font-JakartaBold">-</Text>
@@ -83,7 +93,7 @@ const DriverRideHistoryDetails = () => {
                         <Text className="text-lg font-JakartaSemiBold">{ride.rider?.name || "Rider"}</Text>
                         <View className="flex-row items-center gap-1">
                             <Image source={icons.star} className="w-4 h-4" />
-                            <Text className="text-gray-500">{ride.rider?.rating || "5.0"} Rating</Text>
+                            <Text className="text-gray-500">{Number(ride.rider?.rating) > 0 ? ride.rider?.rating : "New"}</Text>
                         </View>
                     </View>
                 </View>
@@ -97,13 +107,12 @@ const DriverRideHistoryDetails = () => {
                     </View>
                     <View className="flex-row justify-between mb-2">
                         <Text className="text-gray-500">App Commission</Text>
-                        <Text className="font-JakartaMedium text-red-500">- ₦{Math.round(ride.fare_price * 0).toLocaleString()}</Text>
-                        {/* Assuming 0% commission for now or calculate? */}
+                        <Text className="font-JakartaMedium text-red-500">- ₦{Math.round(ride.fare_price * 0.1).toLocaleString()}</Text>
                     </View>
                     <View className="w-full h-[1px] bg-gray-200 my-2" />
                     <View className="flex-row justify-between">
                         <Text className="text-lg font-JakartaBold">Net Earnings</Text>
-                        <Text className="text-lg font-JakartaExtraBold text-[#0CC25F]">₦{Math.round(ride.fare_price).toLocaleString()}</Text>
+                        <Text className="text-lg font-JakartaExtraBold text-[#0CC25F]">₦{Math.round(ride.fare_price * 0.9).toLocaleString()}</Text>
                     </View>
                 </View>
 
@@ -111,10 +120,27 @@ const DriverRideHistoryDetails = () => {
                 <View className="flex-row gap-4 mb-10">
                     <TouchableOpacity
                         className="flex-1 bg-general-100 py-4 rounded-full items-center"
-                        onPress={() => Alert.alert("Help", "Contact Support feature coming soon")}
+                        onPress={() => router.push("/(root)/support" as any)}
                     >
                         <Text className="font-JakartaBold text-gray-900">Report Issue</Text>
                     </TouchableOpacity>
+
+                    {/* Rate Rider Button (Only if not rated) */}
+                    {!ride.user_rating && (
+                        <TouchableOpacity
+                            className="flex-1 bg-[#0286FF] py-4 rounded-full items-center"
+                            onPress={() => {
+                                Alert.alert("Rate Rider", "Rating feature coming soon");
+                            }}
+                        >
+                            <Text className="font-JakartaBold text-white">Rate Rider</Text>
+                        </TouchableOpacity>
+                    )}
+                    {ride.user_rating && (
+                        <View className="flex-1 bg-green-100 py-4 rounded-full items-center">
+                            <Text className="font-JakartaBold text-green-700">Rated: {ride.user_rating} ★</Text>
+                        </View>
+                    )}
                 </View>
 
             </ScrollView>

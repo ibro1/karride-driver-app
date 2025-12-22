@@ -56,7 +56,8 @@ export const useFetch = <T>(url: string, options?: RequestInit) => {
 
     try {
       const result = await fetchAPI(url, options);
-      setData(result);
+      // Handle both { data: ... } and flat responses
+      setData('data' in result ? result.data : result);
     } catch (err) {
       setError((err as Error).message);
     } finally {
