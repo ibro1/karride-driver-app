@@ -21,13 +21,12 @@ on:
 # Environment variables available to all jobs
 env:
   EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-  NODE_OPTIONS: --openssl-legacy-provider # This can stay as it's for Node.js compatibility
+  NODE_OPTIONS: --openssl-legacy-provider
 
 # The collection of jobs to run
 jobs:
   # First job: runs tests and linting
   test:
-    # Logic for when this job should run
     if: >
       github.event_name == 'pull_request' ||
       github.event_name == 'workflow_dispatch' ||
@@ -37,20 +36,15 @@ jobs:
       - name: 🏗 Checkout repository
         uses: actions/checkout@v4
       
-      # REMOVED: pnpm/action-setup step is no longer needed
-
       - name: 🏗 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          # CHANGED: Use npm for caching, which looks for package-lock.json
           cache: 'npm'
       
       - name: 📦 Install dependencies
-        # CHANGED: Use 'npm ci' which is the standard for CI environments. It's faster and safer.
         run: npm ci
       
-      # CHANGED: All script runners are now 'npm run'
       - name: 🧪 Run TypeScript check
         run: npm run tsc:check || true
       - name: 🧹 Run ESLint
@@ -61,7 +55,6 @@ jobs:
   # Second job: builds the app files
   build-and-deploy:
     needs: test
-    # Logic for when this build job should run
     if: >
       needs.test.result == 'success' &&
       (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run'))
@@ -69,18 +62,14 @@ jobs:
     steps:
       - name: 🏗 Checkout repository
         uses: actions/checkout@v4
-
-      # REMOVED: pnpm/action-setup step is no longer needed
       
       - name: 🏗 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          # CHANGED: Use npm for caching
           cache: 'npm'
       
       - name: 📦 Install dependencies and EAS CLI
-        # CHANGED: Use 'npm ci' and 'npm install -g'
         run: |
           npm ci
           npm install -g eas-cli
@@ -89,7 +78,6 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.eas-build-local
-          # CHANGED: The cache key now depends on package-lock.json, not pnpm-lock.yaml
           key: ${{ runner.os }}-eas-build-local-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-eas-build-local-
@@ -100,7 +88,6 @@ jobs:
           eas --version
           
       - name: 📋 Update metro.config.js for SVG support
-        # This step does not depend on the package manager, so it remains unchanged
         run: |
           if [ -f ./metro.config.js ]; then
             echo "Creating backup of metro.config.js"
@@ -127,7 +114,10 @@ jobs:
             echo "metro.config.js not found"
           fi
 
-      # The actual build commands below do not need to change, as they call 'eas' directly.
+      # Create a directory for build outputs
+      - name: 📁 Create build output directory
+        run: mkdir -p ./build-output
+
       - name: 📱 Build Development APK
         if: >
           github.event.inputs.buildType == 'all' ||
@@ -136,7 +126,9 @@ jobs:
           contains(github.event.head_commit.message, '[run ci]')
         run: |
           export NODE_OPTIONS="--openssl-legacy-provider --max_old_space_size=4096"
-          eas build --platform android --profile development --local --non-interactive --output=./app-dev.apk
+          eas build --platform android --profile development --local --non-interactive
+          # Find and move the built APK
+          find . -name "*.apk" -type f -not -path "./build-output/*" -exec cp {} ./build-output/app-dev.apk \;
         env:
           NODE_ENV: development
 
@@ -147,7 +139,9 @@ jobs:
           contains(github.event.head_commit.message, '[run ci]')
         run: |
           export NODE_OPTIONS="--openssl-legacy-provider --max_old_space_size=4096"
-          eas build --platform android --profile preview --local --non-interactive --output=./app-prod.apk
+          eas build --platform android --profile preview --local --non-interactive
+          # Find and move the built APK
+          find . -name "*.apk" -type f -not -path "./build-output/*" -exec cp {} ./build-output/app-prod.apk \;
         env:
           NODE_ENV: production
 
@@ -158,16 +152,21 @@ jobs:
           contains(github.event.head_commit.message, '[run ci]')
         run: |
           export NODE_OPTIONS="--openssl-legacy-provider --max_old_space_size=4096"
-          eas build --platform android --profile production --local --non-interactive --output=./app-prod.aab
+          eas build --platform android --profile production --local --non-interactive
+          # Find and move the built AAB
+          find . -name "*.aab" -type f -not -path "./build-output/*" -exec cp {} ./build-output/app-prod.aab \;
         env:
           NODE_ENV: production
+
+      - name: 🔍 List build outputs
+        run: |
+          echo "Contents of build-output directory:"
+          ls -lah ./build-output/ || echo "No build-output directory found"
 
       - name: 📦 Upload build artifacts to GitHub
         uses: actions/upload-artifact@v4
         with:
           name: app-builds
-          path: |
-            ./app-dev.apk
-            ./app-prod.apk
-            ./app-prod.aab
+          path: ./build-output/
           retention-days: 7
+          if-no-files-found: warn
