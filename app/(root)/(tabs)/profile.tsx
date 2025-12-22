@@ -162,7 +162,7 @@ const Profile = () => {
           <View className="bg-white border border-neutral-100 rounded-2xl overflow-hidden shadow-sm">
             {[
               { icon: icons.lock, label: "Privacy Policy", url: "https://karride.ng/privacy-policy" },
-              { icon: icons.check, label: "Terms of Service", url: "https://karride.ng/terms-of-service" },
+              { icon: icons.term, label: "Terms of Service", url: "https://karride.ng/terms-of-service" },
             ].map((item, index) => (
               <TouchableOpacity
                 key={index}
@@ -183,7 +183,7 @@ const Profile = () => {
         {/* Account Actions */}
         <View className="bg-white border border-neutral-100 rounded-2xl overflow-hidden shadow-sm">
           {[
-            { icon: icons.chat, label: "Support & Help", route: "/(root)/(tabs)/chat" },
+            { icon: icons.chat, label: "Support & Help", route: "/(root)/support" },
           ].map((item, index) => (
             <TouchableOpacity
               key={index}
