@@ -1,14 +1,39 @@
 import { useLocalSearchParams, router } from "expo-router";
-import { View, Text, Image, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from "react-native";
+import { View, Text, Image, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Modal } from "react-native";
+import { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { icons, images } from "@/constants";
-import { useFetch } from "@/lib/fetch";
+import { useFetch, fetchAPI } from "@/lib/fetch";
 import { Ride } from "@/types/type";
 import { formatDate, formatTime } from "@/lib/utils";
 
 const DriverRideHistoryDetails = () => {
     const { id } = useLocalSearchParams();
-    const { data: ride, loading, error } = useFetch<Ride>(`/api/rides/${id}`);
+    const { data: ride, loading, error, refetch } = useFetch<Ride>(`/api/rides/${id}`);
+    const [isModalVisible, setModalVisible] = useState(false);
+    const [selectedRating, setSelectedRating] = useState(0);
+    const [submitting, setSubmitting] = useState(false);
+
+    const submitRating = async () => {
+        if (selectedRating === 0) {
+            Alert.alert("Error", "Please select a rating");
+            return;
+        }
+        setSubmitting(true);
+        try {
+            await fetchAPI(`/api/rides/${id}/rate`, {
+                method: "POST",
+                body: JSON.stringify({ rating: selectedRating, type: "user" }),
+            });
+            Alert.alert("Success", "Rider rated successfully!");
+            setModalVisible(false);
+            refetch();
+        } catch (error: any) {
+            Alert.alert("Error", error.message || "Failed to submit rating");
+        } finally {
+            setSubmitting(false);
+        }
+    };
 
     if (loading) {
         return (
@@ -130,7 +155,8 @@ const DriverRideHistoryDetails = () => {
                         <TouchableOpacity
                             className="flex-1 bg-[#0286FF] py-4 rounded-full items-center"
                             onPress={() => {
-                                Alert.alert("Rate Rider", "Rating feature coming soon");
+                                setSelectedRating(0);
+                                setModalVisible(true);
                             }}
                         >
                             <Text className="font-JakartaBold text-white">Rate Rider</Text>
@@ -142,6 +168,48 @@ const DriverRideHistoryDetails = () => {
                         </View>
                     )}
                 </View>
+
+                {/* Rating Modal */}
+                <Modal
+                    transparent={true}
+                    visible={isModalVisible}
+                    animationType="slide"
+                    onRequestClose={() => setModalVisible(false)}
+                >
+                    <View className="flex-1 justify-end bg-black/50">
+                        <View className="bg-white p-5 rounded-t-3xl">
+                            <Text className="text-xl font-JakartaBold mb-5 text-center">Rate {ride.rider?.name || 'Rider'}</Text>
+
+                            <View className="flex-row justify-center gap-4 mb-8">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                    <TouchableOpacity key={star} onPress={() => setSelectedRating(star)}>
+                                        <Image
+                                            source={icons.star}
+                                            className={`w-12 h-12`}
+                                            style={{ tintColor: selectedRating >= star ? '#FFD700' : '#E0E0E0' }}
+                                            resizeMode="contain"
+                                        />
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+
+                            <TouchableOpacity
+                                onPress={submitRating}
+                                className={`w-full py-4 rounded-full flex-row justify-center items-center ${submitting ? 'bg-gray-300' : 'bg-[#0286FF]'}`}
+                                disabled={submitting}
+                            >
+                                {submitting ? (
+                                    <ActivityIndicator color="white" />
+                                ) : (
+                                    <Text className="text-xl text-white font-JakartaBold">Submit Rating</Text>
+                                )}
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => setModalVisible(false)} className="mt-4 mb-2">
+                                <Text className="text-center text-gray-500 font-JakartaMedium">Cancel</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </Modal>
 
             </ScrollView>
         </SafeAreaView>
