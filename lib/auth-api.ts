@@ -220,6 +220,33 @@ export const getSession = async (): Promise<any> => {
 };
 
 /**
+ * Upload a file
+ */
+export const uploadFile = async (fileUri: string): Promise<string> => {
+    const token = await SecureStore.getItemAsync("session_token");
+    if (!token) throw new Error("Not authenticated");
+
+    const formData = new FormData();
+    formData.append("file", {
+        uri: fileUri,
+        name: `profile-${Date.now()}.jpg`,
+        type: "image/jpeg",
+    } as any);
+
+    const response = await fetch(`${API_URL}/api/upload`, {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+        },
+        body: formData,
+    });
+
+    const data = await handleResponse(response, "File upload failed");
+    return data.url;
+};
+
+/**
  * Register as a driver
  */
 export const registerDriver = async (
@@ -227,6 +254,7 @@ export const registerDriver = async (
     lastName: string,
     phone: string,
     licenseNumber: string,
+    profileImageUrl: string | null,
     vehicleType: string,
     vehicleMake: string,
     vehicleModel: string,
@@ -250,7 +278,9 @@ export const registerDriver = async (
             first_name: firstName,
             last_name: lastName,
             phone,
+            phone,
             license_number: licenseNumber,
+            profile_image_url: profileImageUrl,
             vehicle_type: vehicleType,
             vehicle_make: vehicleMake,
             vehicle_model: vehicleModel,
