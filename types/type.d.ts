@@ -63,6 +63,7 @@ declare interface Ride {
     image: string;
     image: string;
     rating: string;
+    rating_count?: number;
     phone_number: string;
   };
   driver_rating?: number;

@@ -93,7 +93,7 @@ const DriverRideHistoryDetails = () => {
                         <Text className="text-lg font-JakartaSemiBold">{ride.rider?.name || "Rider"}</Text>
                         <View className="flex-row items-center gap-1">
                             <Image source={icons.star} className="w-4 h-4" />
-                            <Text className="text-gray-500">{Number(ride.rider?.rating) > 0 ? ride.rider?.rating : "New"}</Text>
+                            <Text className="text-gray-500">{(ride.rider?.rating_count || 0) > 0 ? ride.rider?.rating : "New"}</Text>
                         </View>
                     </View>
                 </View>
