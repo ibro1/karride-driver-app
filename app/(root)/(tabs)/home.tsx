@@ -26,7 +26,7 @@ const DriverHome = () => {
     const [isMenuVisible, setMenuVisible] = useState(false);
     const [isTogglingStatus, setIsTogglingStatus] = useState(false);
 
-    const [verificationStatus, setVerificationStatus] = useState("pending");
+    const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
 
     const { data: earningsData, refetch: refetchEarnings } = useFetch<any>(`/api/driver/${user?.id}/earnings`);
 
@@ -267,7 +267,7 @@ const DriverHome = () => {
                 </View>
 
                 {/* Verification Warning Banner */}
-                {verificationStatus !== "verified" && (
+                {verificationStatus && verificationStatus !== "verified" && (
                     <View className="mt-4 bg-red-500 p-3 rounded-xl shadow-lg pointer-events-auto">
                         <Text className="text-white font-JakartaBold text-center">Account Under Review</Text>
                         <Text className="text-white text-xs text-center mt-1">
