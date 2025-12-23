@@ -16,8 +16,7 @@ import Avatar from "@/components/Avatar";
 
 const RideScreen = () => {
     const { id } = useLocalSearchParams();
-    const { data: response, loading, error } = useFetch<{ data: Ride }>(`/api/rides/${id}`);
-    const ride = response?.data;
+    const { data: ride, loading, error } = useFetch<Ride>(`/api/rides/${id}`);
     const [status, setStatus] = useState<string>("accepted");
     const [driverLocation, setDriverLocation] = useState<Location.LocationObject | null>(null);
     const [isUpdating, setIsUpdating] = useState(false);
