@@ -49,6 +49,7 @@ const Step3Vehicle: React.FC<Step3Props> = ({ initialData, onNext, onBack, loadi
 
     const documentTypes = [
         { key: "license", label: "Driver's License / ID Card" },
+        { key: "vehicle_image", label: "Vehicle Exterior Photo" },
         { key: "insurance", label: "Vehicle Insurance Check" },
         { key: "roadworthiness", label: "Road Worthiness Certificate" },
         {

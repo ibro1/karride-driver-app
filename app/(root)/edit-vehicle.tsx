@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { View, Text, ScrollView, Alert, Image, TouchableOpacity, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
+import { router, Stack } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import * as SecureStore from "expo-secure-store";
 import InputField from "@/components/InputField";
@@ -9,6 +9,7 @@ import CustomButton from "@/components/CustomButton";
 import { useFetch } from "@/lib/fetch";
 import Skeleton from "@/components/Skeleton";
 import { icons } from "@/constants";
+import { cleanUrl } from "@/lib/utils";
 
 const EditVehicle = () => {
     const { data: profileData, loading: loadingData } = useFetch<any>("/api/driver/profile");
@@ -34,7 +35,7 @@ const EditVehicle = () => {
                 plateNumber: profileData.vehicle.plateNumber || "",
                 carSeats: profileData.vehicle.seats?.toString() || "",
             });
-            setCarImage(profileData.vehicle.vehicleImageUrl || null);
+            setCarImage(cleanUrl(profileData.vehicle.vehicleImageUrl));
         }
     }, [profileData]);
 
@@ -158,8 +159,14 @@ const EditVehicle = () => {
     if (loadingData) {
         return (
             <SafeAreaView className="flex-1 bg-white">
+                <Stack.Screen options={{ headerShown: false }} />
                 <ScrollView className="px-5">
-                    <Text className="text-2xl font-JakartaBold my-5">Edit Vehicle</Text>
+                    <View className="flex-row items-center my-5">
+                        <TouchableOpacity onPress={() => router.back()} className="mr-4">
+                            <Image source={icons.backArrow} className="w-6 h-6" resizeMode="contain" />
+                        </TouchableOpacity>
+                        <Text className="text-2xl font-JakartaBold">Edit Vehicle</Text>
+                    </View>
 
                     {[1, 2, 3, 4, 5].map((i) => (
                         <View key={i} className="mb-5">
@@ -176,8 +183,14 @@ const EditVehicle = () => {
 
     return (
         <SafeAreaView className="flex-1 bg-white">
+            <Stack.Screen options={{ headerShown: false }} />
             <ScrollView className="px-5" contentContainerStyle={{ paddingBottom: 100 }}>
-                <Text className="text-2xl font-JakartaBold my-5">Edit Vehicle</Text>
+                <View className="flex-row items-center my-5">
+                    <TouchableOpacity onPress={() => router.back()} className="mr-4">
+                        <Image source={icons.backArrow} className="w-6 h-6" resizeMode="contain" />
+                    </TouchableOpacity>
+                    <Text className="text-2xl font-JakartaBold">Edit Vehicle</Text>
+                </View>
 
                 {/* Car Image Upload */}
                 <View className="mb-5">

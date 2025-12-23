@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { View, Text, ScrollView, Alert, TouchableOpacity, Image, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
+import { Stack, router } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import * as SecureStore from "expo-secure-store";
 import InputField from "@/components/InputField";
@@ -10,6 +10,7 @@ import { useFetch } from "@/lib/fetch";
 import { useUser } from "@/lib/auth-context";
 import Skeleton from "@/components/Skeleton";
 import { icons } from "@/constants";
+import { cleanUrl } from "@/lib/utils";
 
 const EditProfile = () => {
     const { user } = useUser();
@@ -32,7 +33,7 @@ const EditProfile = () => {
                 lastName: profileData.driver.lastName || "",
                 phone: profileData.driver.phone || "",
                 email: user?.email || "",
-                profileImageUrl: profileData.driver.profileImageUrl || "",
+                profileImageUrl: cleanUrl(profileData.driver.profileImageUrl) || "",
             });
         }
     }, [profileData, user]);
@@ -133,8 +134,14 @@ const EditProfile = () => {
     if (loadingData) {
         return (
             <SafeAreaView className="flex-1 bg-white">
+                <Stack.Screen options={{ headerShown: false }} />
                 <ScrollView className="px-5">
-                    <Text className="text-2xl font-JakartaBold my-5">Edit Profile</Text>
+                    <View className="flex-row items-center my-5">
+                        <TouchableOpacity onPress={() => router.back()} className="mr-4">
+                            <Image source={icons.backArrow} className="w-6 h-6" resizeMode="contain" />
+                        </TouchableOpacity>
+                        <Text className="text-2xl font-JakartaBold">Edit Profile</Text>
+                    </View>
                     <View className="items-center mb-5">
                         <Skeleton width={100} height={100} borderRadius={50} />
                     </View>
@@ -154,8 +161,14 @@ const EditProfile = () => {
 
     return (
         <SafeAreaView className="flex-1 bg-white">
+            <Stack.Screen options={{ headerShown: false }} />
             <ScrollView className="px-5" contentContainerStyle={{ paddingBottom: 100 }}>
-                <Text className="text-2xl font-JakartaBold my-5">Edit Profile</Text>
+                <View className="flex-row items-center my-5">
+                    <TouchableOpacity onPress={() => router.back()} className="mr-4">
+                        <Image source={icons.backArrow} className="w-6 h-6" resizeMode="contain" />
+                    </TouchableOpacity>
+                    <Text className="text-2xl font-JakartaBold">Edit Profile</Text>
+                </View>
 
                 <View className="items-center mb-6">
                     <View className="relative">

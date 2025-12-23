@@ -44,3 +44,21 @@ export function formatDate(dateString: string): string {
 
   return `${day < 10 ? "0" + day : day} ${month} ${year}`;
 }
+
+export function cleanUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL || "";
+
+  // Clean localhost
+  if (url.includes("localhost") || url.includes("127.0.0.1")) {
+    return url.replace(/https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/, apiUrl);
+  }
+
+  // Handle relative paths
+  if (!url.startsWith("http")) {
+    return `${apiUrl}${url.startsWith("/") ? "" : "/"}${url}`;
+  }
+
+  return url;
+}
