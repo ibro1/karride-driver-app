@@ -157,6 +157,7 @@ jobs:
         if: >
           github.event.inputs.buildType == 'all' ||
           github.event.inputs.buildType == 'prod-apk' ||
+          contains(github.event.head_commit.message, '[run preview ci]') ||
           contains(github.event.head_commit.message, '[run ci]')
         run: |
           export NODE_OPTIONS="--openssl-legacy-provider --max_old_space_size=4096"
