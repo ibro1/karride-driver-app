@@ -1,12 +1,14 @@
 import { router } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useRef } from "react";
 import { Alert, Image, ScrollView, Text, View, TouchableOpacity, FlatList } from "react-native";
 import { ReactNativeModal } from "react-native-modal";
+import { FirebaseRecaptchaVerifierModal } from "expo-firebase-recaptcha";
 
 import CustomButton from "@/components/CustomButton";
 import InputField from "@/components/InputField";
 import { icons, images } from "@/constants";
 import { useAuth } from "@/lib/auth-context";
+import { firebaseConfig } from "../../lib/firebase";
 
 const countries = [
   { code: "NG", name: "Nigeria", dial_code: "+234", flag: "🇳🇬" },
@@ -21,6 +23,7 @@ const countries = [
 const SignIn = () => {
   const { sendOtp, isLoaded } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const recaptchaVerifier = useRef(null);
 
   const [form, setForm] = useState({
     phone: "",
@@ -47,7 +50,8 @@ const SignIn = () => {
       }
 
       const fullPhone = `${form.countryCode}${phoneNumber}`;
-      await sendOtp(fullPhone);
+      // Pass verifier to sendOtp
+      await sendOtp(fullPhone, recaptchaVerifier.current);
 
       router.push({
         pathname: "/(auth)/verification",
@@ -128,6 +132,11 @@ const SignIn = () => {
               />
             </View>
           </ReactNativeModal>
+
+          <FirebaseRecaptchaVerifierModal
+            ref={recaptchaVerifier}
+            firebaseConfig={firebaseConfig}
+          />
 
         </View>
       </View>
