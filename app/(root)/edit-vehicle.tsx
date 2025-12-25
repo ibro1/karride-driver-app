@@ -37,7 +37,123 @@ const EditVehicle = () => {
             });
             setCarImage(cleanUrl(profileData.vehicle.vehicleImageUrl));
         }
+
+        if (profileData?.documents) {
+            const docs = (profileData.documents || []).reduce((acc: any, doc: any) => {
+                acc[doc.type] = cleanUrl(doc.url);
+                return acc;
+            }, {});
+            // Check for profile license url too?
+            if (profileData.driver?.licenseUrl) docs['license'] = cleanUrl(profileData.driver.licenseUrl);
+            setDocuments(docs);
+
+            const statuses = (profileData.documents || []).reduce((acc: any, doc: any) => {
+                acc[doc.type] = { status: doc.status, reason: doc.rejectionReason };
+                return acc;
+            }, {});
+            setDocStatuses(statuses);
+        }
     }, [profileData]);
+
+    const [documents, setDocuments] = useState<{ [key: string]: string }>({});
+    const [docStatuses, setDocStatuses] = useState<{ [key: string]: { status: string, reason?: string } }>({});
+    const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
+
+    const city = profileData?.driver?.city || "State";
+    const isLagos = city.toLowerCase().includes("lagos");
+
+    const documentTypes = [
+        { key: "license", label: "Driver's License / ID Card" },
+        { key: "vehicle_image", label: "Vehicle Exterior Photo" },
+        { key: "insurance", label: "Vehicle Insurance Check" },
+        { key: "roadworthiness", label: "Road Worthiness Certificate" },
+        {
+            key: "hackney_permit",
+            label: isLagos ? "Lagos State Hackney Permit" : `${city} Hackney Permit / Papers`
+        },
+        { key: "ownership_proof", label: "Proof of Ownership" },
+    ];
+
+    const pickDocument = async (type: string) => {
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            quality: 0.7,
+        });
+
+        if (!result.canceled) {
+            setDocuments(prev => ({ ...prev, [type]: result.assets[0].uri }));
+            setDocStatuses(prev => ({ ...prev, [type]: { status: 'new_upload' } }));
+        }
+    };
+
+    const handleDocumentUpload = async (docKey: string) => {
+        setUploadingDoc(docKey);
+        try {
+            const token = await SecureStore.getItemAsync("session_token");
+            let url = documents[docKey];
+
+            // 1. Upload File
+            // Re-use logic from handleUpdate or import uploadFile
+            // duplicating for speed/context here as handleUpdate logic is a bit manual
+            if (url && !url.startsWith("http")) {
+                const uploadUrl = `${process.env.EXPO_PUBLIC_API_URL}/api/upload`;
+                const formData = new FormData();
+                const filename = url.split('/').pop() || 'image.jpg';
+                const match = /\.(\w+)$/.exec(filename);
+                const type = match ? `image/${match[1]}` : 'image/jpeg';
+
+                formData.append('file', {
+                    uri: Platform.OS === 'android' ? url : url.replace('file://', ''),
+                    name: filename,
+                    type: type,
+                } as any);
+
+                const uploadRes = await fetch(uploadUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json',
+                    },
+                    body: formData,
+                });
+
+                if (!uploadRes.ok) throw new Error("Upload failed");
+                const uploadData = await uploadRes.json();
+                url = uploadData.url;
+            }
+
+            // 2. Save Document via Onboarding API (re-using it as it handles upsert)
+            const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/driver/onboarding/documents`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    city: city, // Required by schema
+                    documents: [{ type: docKey, url }]
+                }),
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error || "Save failed");
+            }
+
+            Alert.alert("Success", "Document updated successfully");
+
+            // Update status to pending/uploaded
+            setDocStatuses(prev => ({ ...prev, [docKey]: { status: 'pending' } }));
+            // Update url to remote url
+            setDocuments(prev => ({ ...prev, [docKey]: url }));
+
+        } catch (error: any) {
+            Alert.alert("Error", error.message);
+        } finally {
+            setUploadingDoc(null);
+        }
+    };
 
 
     const pickImage = async () => {
@@ -268,11 +384,65 @@ const EditVehicle = () => {
                 />
 
                 <CustomButton
-                    title="Save Changes"
+                    title="Save Vehicle Details"
                     onPress={handleUpdate}
                     className="mt-6"
                     isLoading={isSubmitting}
                 />
+
+                <View className="h-[1px] bg-gray-200 my-8" />
+
+                <Text className="text-xl font-JakartaBold mb-5">Documents</Text>
+
+                {documentTypes.map((doc) => {
+                    const statusInfo = docStatuses[doc.key];
+                    const isRejected = statusInfo?.status === 'rejected';
+                    const isNewUpload = statusInfo?.status === 'new_upload';
+
+                    return (
+                        <View key={doc.key} className="bg-neutral-100 p-4 rounded-xl mb-3 border border-neutral-200">
+                            <View className="flex-row items-center justify-between">
+                                <Text className="font-JakartaMedium text-base flex-1">{doc.label}</Text>
+                                <TouchableOpacity
+                                    onPress={() => pickDocument(doc.key)}
+                                    className={`px-4 py-2 rounded-full ${isRejected ? "bg-red-100 border border-red-300" :
+                                        (documents[doc.key] && !isNewUpload) ? "bg-green-100" :
+                                            isNewUpload ? "bg-blue-100" : "bg-white border border-neutral-300"
+                                        }`}
+                                >
+                                    <Text className={`${isRejected ? "text-red-700 font-bold" :
+                                        (documents[doc.key] && !isNewUpload) ? "text-green-700 font-bold" :
+                                            isNewUpload ? "text-blue-700 font-bold" : "text-black"
+                                        }`}>
+                                        {isRejected ? "Re-upload" :
+                                            isNewUpload ? "Selected" :
+                                                documents[doc.key] ? "Uploaded ✓" : "Upload"}
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                            {isRejected && statusInfo?.reason && (
+                                <Text className="text-red-500 text-sm mt-2 ml-1">
+                                    Reason: {statusInfo.reason}
+                                </Text>
+                            )}
+                            {isNewUpload && (
+                                <View className="mt-2 flex-row justify-end">
+                                    <TouchableOpacity
+                                        onPress={() => handleDocumentUpload(doc.key)}
+                                        disabled={uploadingDoc === doc.key}
+                                        className="bg-primary-500 px-4 py-2 rounded-lg"
+                                    >
+                                        <Text className="text-white font-bold text-sm">
+                                            {uploadingDoc === doc.key ? "Uploading..." : "Save Update"}
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+                        </View>
+                    );
+                })}
+
+                <View className="h-10" />
             </ScrollView>
         </SafeAreaView>
     );

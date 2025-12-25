@@ -19,6 +19,9 @@ export default {
             url: "https://u.expo.dev/bb5677ce-a44c-4a45-8071-ca1673c4a918",
             fallbackToCacheTimeout: 0
         },
+        runtimeVersion: {
+            policy: "appVersion"
+        },
         ios: {
             supportsTablet: true,
             bundleIdentifier: "ng.karride.driver",
