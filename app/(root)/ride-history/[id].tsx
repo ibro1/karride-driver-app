@@ -9,9 +9,9 @@ import { Ride } from "@/types/type";
 import { formatDate, formatTime } from "@/lib/utils";
 
 const DriverRideHistoryDetails = () => {
-    const { id } = useLocalSearchParams();
+    const { id, autoRate } = useLocalSearchParams();
     const { data: ride, loading, error, refetch } = useFetch<Ride>(`/api/rides/${id}`);
-    const [isModalVisible, setModalVisible] = useState(false);
+    const [isModalVisible, setModalVisible] = useState(autoRate === "true");
     const [selectedRating, setSelectedRating] = useState(0);
     const [submitting, setSubmitting] = useState(false);
 
@@ -79,7 +79,10 @@ const DriverRideHistoryDetails = () => {
             <ScrollView className="px-5">
                 {/* Header */}
                 <View className="flex-row items-center justify-between my-5">
-                    <Text className="text-2xl font-JakartaBold">Trip Details</Text>
+                    <View>
+                        <Text className="text-2xl font-JakartaBold">Trip Details</Text>
+                        <Text className="text-sm font-JakartaSemiBold text-green-600">Status: Completed</Text>
+                    </View>
                     <TouchableOpacity onPress={() => router.back()} className="w-10 h-10 bg-gray-100 rounded-full justify-center items-center">
                         <Image source={icons.backArrow} className="w-6 h-6" resizeMode="contain" />
                     </TouchableOpacity>

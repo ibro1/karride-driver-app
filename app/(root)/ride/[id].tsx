@@ -70,8 +70,8 @@ const RideScreen = () => {
             socket.emit(socketEvent, { rideId: id });
 
             if (newStatus === "completed") {
-                Alert.alert("Success", "Ride Completed!");
-                router.replace("/(root)/(tabs)/home");
+                // Redirect to ride details with auto-rate modal
+                router.replace(`/(root)/ride-history/${id}?autoRate=true` as any);
             }
         } catch (error: any) {
             Alert.alert("Error", error.message || "Failed to update status");
