@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { View, Text, ActivityIndicator, Alert, TouchableOpacity, Image, Switch } from "react-native";
+import { View, Text, ActivityIndicator, Alert, TouchableOpacity, Image, Switch, AppState } from "react-native";
 import { useAuth } from "@/lib/auth-context";
 import * as Location from "expo-location";
 import Map from "@/components/Map";
@@ -97,6 +97,12 @@ const DriverHome = () => {
                             });
                         });
 
+                        socket.on("driver_verification_updated", (data: { status: string, message: string }) => {
+                            console.log("Driver Verification Updated:", data);
+                            setVerificationStatus(data.status);
+                            Alert.alert("Account Update", data.message);
+                        });
+
                         // 3. Check for pending request
                         if (response.pendingRequest) {
                             setRideRequest(response.pendingRequest);
@@ -142,6 +148,34 @@ const DriverHome = () => {
         }
         return () => clearInterval(interval);
     }, [isOnline, hasPermission, user]);
+
+    // Handle AppState change to refresh data when coming to foreground
+    useEffect(() => {
+        const subscription = AppState.addEventListener("change", nextAppState => {
+            if (nextAppState === "active") {
+                console.log("App has come to the foreground!");
+                // Re-init driver or refetch crucial data
+                // We reuse initDriverAndSocket logic or parts of it
+                if (user) {
+                    getDriverProfile(user.id).then(response => {
+                        if (response && response.driver) {
+                            setVerificationStatus(response.driver.verificationStatus || "pending");
+                            // Also check for pending rides again
+                            if (response.pendingRequest) {
+                                setRideRequest(response.pendingRequest);
+                            }
+                        }
+                    });
+                    refetchEarnings();
+                }
+            }
+        });
+
+        return () => {
+            subscription.remove();
+        };
+    }, [user, refetchEarnings]);
+
 
     // Refetch earnings when screen comes into focus or periodically
     useEffect(() => {
