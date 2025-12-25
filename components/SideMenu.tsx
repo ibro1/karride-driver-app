@@ -42,25 +42,20 @@ const SideMenu = ({ isVisible, onClose }: SideMenuProps) => {
       animationOut="slideOutLeft"
       style={{ margin: 0, justifyContent: "flex-start" }}
     >
-      <View className="bg-white h-full w-[75%] p-5 pt-16">
-        {/* Header */}
-        <View className="flex-row items-center mb-10">
-          <Avatar
-            source={user?.image}
-            name={user?.name || "Driver"}
-            size={16}
-            className="border-2 border-primary-500"
+      <View className="bg-white h-full w-[65%]">
+        {/* Brand Header */}
+        <View className="bg-[#0286FF] pt-16 pb-8 px-5 rounded-br-[30px]">
+          <Image
+            source={require("@/assets/images/logo-light.png")}
+            className="w-32 h-10 mb-6"
+            resizeMode="contain"
           />
-          <View className="ml-4">
-            <Text className="text-lg font-JakartaBold text-neutral-800">
-              {user?.name || "Driver"}
-            </Text>
-            <Text className="text-sm text-neutral-500">{user?.email}</Text>
-          </View>
+
+          {/* Profile info removed for cleaner look, available in menu list */}
         </View>
 
-        {/* Menu Items */}
-        <View className="flex-1">
+        {/* Menu Items Container */}
+        <View className="flex-1 px-5 pt-6">
           {menuItems.map((item, index) => (
             <TouchableOpacity
               key={index}
