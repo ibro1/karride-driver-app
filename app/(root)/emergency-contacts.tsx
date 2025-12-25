@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert, Image, ActivityIndicator, Modal } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
+import * as Contacts from "expo-contacts";
 import { icons } from "@/constants";
-import { useUser } from "@/lib/auth-context"; // Still needed for setUser if we want to try syncing, but main source is API
+import { useUser } from "@/lib/auth-context";
 import { updateUserProfile } from "@/lib/auth-api";
 import { useFetch } from "@/lib/fetch";
 
@@ -14,6 +15,7 @@ interface Contact {
 }
 
 const EmergencyContacts = () => {
+    // We use user context but fetch latest profile data to be sure
     const { user } = useUser();
     const { data: profileData, loading: loadingProfile, refetch } = useFetch<any>("/api/driver/profile");
 
@@ -31,6 +33,34 @@ const EmergencyContacts = () => {
             setContacts(profileData.emergencyContacts);
         }
     }, [profileData]);
+
+    const handleImportContact = async () => {
+        try {
+            const { status } = await Contacts.requestPermissionsAsync();
+            if (status !== 'granted') {
+                Alert.alert('Permission denied', 'Allow access to contacts to import.');
+                return;
+            }
+
+            const contact = await Contacts.presentContactPickerAsync();
+            if (contact) {
+                setName(contact.name || "");
+                if (contact.phoneNumbers && contact.phoneNumbers.length > 0) {
+                    setPhone(contact.phoneNumbers[0].number || "");
+                }
+                if (contact.emails && contact.emails.length > 0) {
+                    setEmail(contact.emails[0].email || "");
+                }
+            }
+        } catch (error) {
+            // Don't alert on cancel
+            if (typeof error === 'object' && error !== null && 'message' in error && (error as any).message.includes('User canceled')) {
+                return;
+            }
+            console.log('Error importing contact:', error);
+            Alert.alert('Error', 'Failed to access contacts or canceled.');
+        }
+    };
 
     const handleAddContact = async () => {
         if (!name || !phone) {
@@ -88,7 +118,6 @@ const EmergencyContacts = () => {
         <SafeAreaView className="flex-1 bg-white">
             <View className="flex-row items-center p-5 border-b border-neutral-100">
                 <TouchableOpacity onPress={() => router.back()} className="mr-4">
-                    {/* Check if backArrow is in icons, referencing constants/index.ts from driver app */}
                     <Image source={icons.backArrow} className="w-6 h-6" resizeMode="contain" />
                 </TouchableOpacity>
                 <Text className="text-xl font-JakartaBold">Emergency Contacts</Text>
@@ -111,7 +140,6 @@ const EmergencyContacts = () => {
                                     {contact.email && <Text className="text-neutral-400 text-xs">{contact.email}</Text>}
                                 </View>
                                 <TouchableOpacity onPress={() => handleDeleteContact(index)} className="p-2">
-                                    {/* close icon from constants */}
                                     <Image source={icons.close} className="w-5 h-5 opacity-40" resizeMode="contain" />
                                 </TouchableOpacity>
                             </View>
@@ -145,6 +173,15 @@ const EmergencyContacts = () => {
                                 <Image source={icons.close} className="w-6 h-6" resizeMode="contain" />
                             </TouchableOpacity>
                         </View>
+
+                        {/* Import Button */}
+                        <TouchableOpacity
+                            onPress={handleImportContact}
+                            className="flex-row items-center justify-center bg-neutral-100 p-4 rounded-xl mb-6 border border-neutral-200"
+                        >
+                            <Image source={icons.person} className="w-5 h-5 mr-3" resizeMode="contain" />
+                            <Text className="font-JakartaBold text-neutral-800">Import from Phone List</Text>
+                        </TouchableOpacity>
 
                         <View className="space-y-4">
                             <View>
