@@ -22,32 +22,35 @@ const Earnings = () => {
 
       {loading ? (
         <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#0286FF" />
+          <ActivityIndicator size="large" color="#0369a1" />
         </View>
       ) : (
         <FlatList
           data={earningsData?.recent_rides || []}
           keyExtractor={(item) => item.rideId?.toString() || Math.random().toString()}
-          contentContainerStyle={{ padding: 20 }}
+          contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
           ListHeaderComponent={() => (
             <View className="mb-6">
-              {/* Summary Card */}
-              <View className="bg-[#0286FF] rounded-2xl p-6 shadow-md mb-6">
-                <Text className="text-white text-lg font-JakartaMedium mb-2">Total Earnings</Text>
-                <Text className="text-white text-4xl font-JakartaBold mb-4">
-                  ₦{earningsData?.total_earnings?.toFixed(2) || "0.00"}
+              {/* Summary Card - Modern Premium Look */}
+              <View className="bg-slate-900 rounded-[32px] p-7 shadow-xl mb-8 overflow-hidden relative">
+                {/* Decorative Pattern / Glow */}
+                <View className="absolute -top-10 -right-10 w-40 h-40 bg-blue-600/20 rounded-full blur-3xl" />
+
+                <Text className="text-blue-400 text-xs font-JakartaBold mb-1 uppercase tracking-widest">Available Balance</Text>
+                <Text className="text-white text-4xl font-JakartaExtraBold mb-6">
+                  ₦{earningsData?.total_earnings?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
                 </Text>
 
-                <View className="flex-row justify-between bg-white/20 rounded-xl p-4 mb-4">
-                  <View>
-                    <Text className="text-white/80 text-sm font-JakartaMedium">Today</Text>
-                    <Text className="text-white text-xl font-JakartaBold">
-                      ₦{earningsData?.today_earnings?.toFixed(2) || "0.00"}
+                <View className="flex-row gap-4 mb-6">
+                  <View className="flex-1 bg-white/5 rounded-2xl p-4 border border-white/10">
+                    <Text className="text-white/40 text-[10px] font-JakartaBold uppercase tracking-tighter">Today</Text>
+                    <Text className="text-white text-lg font-JakartaBold">
+                      ₦{earningsData?.today_earnings?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
                     </Text>
                   </View>
-                  <View>
-                    <Text className="text-white/80 text-sm font-JakartaMedium">Rides</Text>
-                    <Text className="text-white text-xl font-JakartaBold">
+                  <View className="flex-1 bg-white/5 rounded-2xl p-4 border border-white/10">
+                    <Text className="text-white/40 text-[10px] font-JakartaBold uppercase tracking-tighter">Trips</Text>
+                    <Text className="text-white text-lg font-JakartaBold">
                       {earningsData?.today_rides || 0}
                     </Text>
                   </View>
@@ -56,53 +59,62 @@ const Earnings = () => {
                 <View className="flex-row gap-3">
                   <TouchableOpacity
                     onPress={() => router.push("/(root)/wallet/withdraw" as any)}
-                    className="flex-1 bg-white py-3 rounded-full items-center"
+                    className="flex-1 bg-blue-600 py-4 rounded-2xl items-center shadow-lg shadow-blue-900/40"
                   >
-                    <Text className="text-[#0286FF] font-JakartaBold">Cash Out</Text>
+                    <Text className="text-white font-JakartaBold text-sm">Cash Out</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
                     onPress={() => router.push("/(root)/wallet/add-bank")}
-                    className="flex-1 bg-[#024482] py-3 rounded-full items-center"
+                    className="w-14 h-14 bg-white/10 rounded-2xl items-center justify-center border border-white/10"
                   >
-                    <Text className="text-white font-JakartaBold">Bank Info</Text>
+                    <Image source={icons.profile} className="w-5 h-5" tintColor="white" />
                   </TouchableOpacity>
                 </View>
-
-                <Text className="text-white/60 text-xs text-center mt-3 font-JakartaMedium">
-                  Next Automatic Payout: Tuesday, Dec 23
-                </Text>
               </View>
 
-              <Text className="text-lg font-JakartaBold text-neutral-800 mb-4">Recent Transactions</Text>
+              <View className="flex-row items-center justify-between mb-4 px-1">
+                <Text className="text-lg font-JakartaExtraBold text-gray-900">Recent Transactions</Text>
+                <TouchableOpacity>
+                  <Text className="text-xs font-JakartaBold text-blue-600">See All</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           )}
           renderItem={({ item }) => (
-            <View className="flex-row justify-between items-center bg-white p-4 rounded-xl border border-neutral-100 mb-3 shadow-sm">
+            <TouchableOpacity
+              activeOpacity={0.7}
+              className="flex-row items-center bg-white p-4 rounded-2xl mb-4 shadow-sm shadow-neutral-100 border-l-4 border-emerald-500"
+            >
+              <View className="w-10 h-10 rounded-xl bg-emerald-50 items-center justify-center mr-4">
+                <Image source={icons.to} className="w-4 h-4" tintColor="#10b981" />
+              </View>
+
               <View className="flex-1">
-                <Text className="text-base font-JakartaBold text-neutral-800 mb-1">
-                  Ride #{item.rideId}
+                <Text className="text-sm font-JakartaBold text-gray-900 mb-0.5" numberOfLines={1}>
+                  Trip Completion #{item.rideId}
                 </Text>
-                <Text className="text-sm text-neutral-500">
+                <Text className="text-[11px] font-JakartaMedium text-gray-400">
                   {formatDate(item.createdAt)} • {formatTime(item.rideTime)}
                 </Text>
-                <Text className="text-xs text-neutral-400 mt-1" numberOfLines={1}>
-                  {item.destinationAddress}
-                </Text>
               </View>
+
               <View className="items-end">
-                <Text className="text-lg font-JakartaBold text-green-500">
-                  +₦{(item.driverPayout ?? item.farePrice ?? 0).toFixed(2)}
+                <Text className="text-base font-JakartaExtraBold text-emerald-600">
+                  +₦{(item.driverPayout ?? item.farePrice ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </Text>
-                <Text className="text-xs text-neutral-400 capitalize">
-                  {item.paymentStatus}
-                </Text>
+                <View className="bg-emerald-50 px-2 py-0.5 rounded-md mt-1">
+                  <Text className="text-[9px] font-JakartaBold text-emerald-600 uppercase tracking-tighter">
+                    {item.paymentStatus || "Paid"}
+                  </Text>
+                </View>
               </View>
-            </View>
+            </TouchableOpacity>
           )}
           ListEmptyComponent={() => (
-            <View className="items-center py-10">
-              <Text className="text-neutral-500">No recent transactions</Text>
+            <View className="items-center py-20">
+              <Image source={images.noResult} className="w-20 h-20 opacity-20 mb-4" resizeMode="contain" />
+              <Text className="text-gray-400 font-JakartaMedium">No recent transactions</Text>
             </View>
           )}
         />

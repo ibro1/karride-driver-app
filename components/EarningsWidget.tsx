@@ -9,38 +9,41 @@ interface EarningsWidgetProps {
 
 const EarningsWidget = ({ earnings, ridesCount }: EarningsWidgetProps) => {
     return (
-        <View className="bg-white rounded-2xl p-5 shadow-sm shadow-neutral-300 mx-5 mb-5">
-            <View className="flex-row justify-between items-center mb-4">
-                <Text className="text-lg font-JakartaBold text-neutral-800">
-                    Today's Summary
-                </Text>
+        <View className="bg-white rounded-3xl p-6 shadow-sm shadow-neutral-200 mx-5 mb-6 border border-neutral-50">
+            <View className="flex-row justify-between items-center mb-6">
+                <View className="flex-row items-center">
+                    <View className="w-1 h-4 bg-emerald-500 rounded-full mr-2" />
+                    <Text className="text-lg font-JakartaBold text-gray-900">
+                        Today's Summary
+                    </Text>
+                </View>
                 <TouchableOpacity
                     onPress={() => router.push("/(root)/earnings")}
-                    className="flex-row items-center"
+                    className="bg-neutral-50 px-3 py-1.5 rounded-xl flex-row items-center"
                 >
-                    <Text className="text-sm font-JakartaMedium text-primary-500 mr-1">
-                        Details
+                    <Text className="text-xs font-JakartaBold text-blue-600 mr-1">
+                        View Details
                     </Text>
-                    <Image source={icons.arrowDown} className="w-4 h-4 -rotate-90" tintColor="#0286FF" resizeMode="contain" />
+                    <Image source={icons.arrowDown} className="w-3 h-3 -rotate-90" tintColor="#2563eb" resizeMode="contain" />
                 </TouchableOpacity>
             </View>
 
             <View className="flex-row justify-between items-center">
-                <View className="items-center flex-1 border-r border-neutral-200">
-                    <Text className="text-2xl font-JakartaBold text-neutral-800">
-                        ₦{earnings.toFixed(2)}
+                <View className="items-center flex-1 border-r border-neutral-100">
+                    <Text className="text-2xl font-JakartaExtraBold text-emerald-600">
+                        ₦{earnings.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </Text>
-                    <Text className="text-sm font-JakartaMedium text-neutral-500">
+                    <Text className="text-[12px] font-JakartaMedium text-gray-400 mt-1 uppercase tracking-wider">
                         Earnings
                     </Text>
                 </View>
 
                 <View className="items-center flex-1">
-                    <Text className="text-2xl font-JakartaBold text-neutral-800">
+                    <Text className="text-2xl font-JakartaExtraBold text-gray-900">
                         {ridesCount}
                     </Text>
-                    <Text className="text-sm font-JakartaMedium text-neutral-500">
-                        Rides
+                    <Text className="text-[12px] font-JakartaMedium text-gray-400 mt-1 uppercase tracking-wider">
+                        Trips
                     </Text>
                 </View>
             </View>
