@@ -83,7 +83,7 @@ const DriverRideHistoryDetails = () => {
                         <Text className="text-2xl font-JakartaBold">Trip Details</Text>
                         <Text className="text-sm font-JakartaSemiBold text-green-600">Status: Completed</Text>
                     </View>
-                    <TouchableOpacity onPress={() => router.back()} className="w-10 h-10 bg-gray-100 rounded-full justify-center items-center">
+                    <TouchableOpacity onPress={() => router.replace("/(root)/(tabs)/home")} className="w-10 h-10 bg-gray-100 rounded-full justify-center items-center">
                         <Image source={icons.backArrow} className="w-6 h-6" resizeMode="contain" />
                     </TouchableOpacity>
                 </View>
@@ -152,16 +152,16 @@ const DriverRideHistoryDetails = () => {
                 <View className="bg-gray-50 p-4 rounded-xl mb-5">
                     <View className="flex-row justify-between mb-2">
                         <Text className="text-gray-500">Gross Fare</Text>
-                        <Text className="font-JakartaMedium">₦{Math.round(ride.fare_price).toLocaleString()}</Text>
+                        <Text className="font-JakartaMedium">₦{ride.fare_price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Text>
                     </View>
                     <View className="flex-row justify-between mb-2">
                         <Text className="text-gray-500">App Commission</Text>
-                        <Text className="font-JakartaMedium text-red-500">- ₦{Math.round(ride.fare_price * 0.1).toLocaleString()}</Text>
+                        <Text className="font-JakartaMedium text-red-500">- ₦{(ride.fare_price * 0.1).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Text>
                     </View>
                     <View className="w-full h-[1px] bg-gray-200 my-2" />
                     <View className="flex-row justify-between">
                         <Text className="text-lg font-JakartaBold">Net Earnings</Text>
-                        <Text className="text-lg font-JakartaExtraBold text-[#0CC25F]">₦{Math.round(ride.fare_price * 0.9).toLocaleString()}</Text>
+                        <Text className="text-lg font-JakartaExtraBold text-[#0CC25F]">₦{(ride.fare_price * 0.9).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Text>
                     </View>
                 </View>
 

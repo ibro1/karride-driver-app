@@ -77,7 +77,7 @@ const RideCard = ({ ride }: { ride: Ride }) => {
 
         <View className="flex flex-col items-end">
           <Text className="text-lg font-JakartaExtraBold text-[#0CC25F]">
-            ₦{Math.round(ride.fare_price).toLocaleString()}
+            ₦{ride.fare_price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </Text>
           {ride.ride_distance ? (
             <Text className="text-xs font-JakartaMedium text-gray-500">
