@@ -10,8 +10,11 @@ const RideSummaryStats = ({ rides }: RideSummaryStatsProps) => {
     const completedRides = rides.filter(r => r.status === 'completed');
     const totalEarnings = completedRides.reduce((acc, r) => acc + (r.fare_price || 0), 0);
 
-    // Calculate avg rating
-    const avgRating = "5.0";
+    // Calculate average rider rating from completed rides
+    const ridesWithRatings = completedRides.filter(r => r.rider?.rating != null);
+    const avgRating = ridesWithRatings.length > 0
+        ? (ridesWithRatings.reduce((acc, r) => acc + (parseFloat(r.rider?.rating || '0')), 0) / ridesWithRatings.length).toFixed(1)
+        : 'N/A';
 
     return (
         <View className="mb-8 overflow-hidden rounded-[32px] shadow-2xl shadow-emerald-500/10 border border-white/20">

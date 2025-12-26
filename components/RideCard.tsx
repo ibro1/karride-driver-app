@@ -85,7 +85,15 @@ const RideCard = ({ ride }: { ride: Ride }) => {
             </View>
             <View>
               <Text className="text-[15px] font-JakartaBold text-gray-900">{ride.rider?.name || "Rider"}</Text>
-              <Text className="text-[11px] font-JakartaMedium text-gray-400">Rider</Text>
+              <View className="flex-row items-center mt-0.5">
+                <Text className="text-[11px] font-JakartaMedium text-gray-400 mr-1.5">Rider</Text>
+                {ride.rider?.rating != null ? (
+                  <View className="flex-row items-center bg-emerald-50 px-1.5 py-0.5 rounded-md">
+                    <Text className="text-[9px] font-JakartaBold text-emerald-600">{parseFloat(ride.rider.rating).toFixed(1)}</Text>
+                    <Text className="text-emerald-600 ml-0.5 text-[8px]">★</Text>
+                  </View>
+                ) : null}
+              </View>
             </View>
           </View>
 
