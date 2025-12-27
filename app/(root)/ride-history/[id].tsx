@@ -7,6 +7,7 @@ import { useFetch, fetchAPI } from "@/lib/fetch";
 import Skeleton from "@/components/Skeleton";
 import { Ride } from "@/types/type";
 import { formatDate, formatTime } from "@/lib/utils";
+import RideStatusBadge from "@/components/RideStatusBadge";
 
 const DriverRideHistoryDetails = () => {
     const { id, autoRate } = useLocalSearchParams();
@@ -80,8 +81,10 @@ const DriverRideHistoryDetails = () => {
                 {/* Header */}
                 <View className="flex-row items-center justify-between my-5">
                     <View>
-                        <Text className="text-2xl font-JakartaBold">Trip Details</Text>
-                        <Text className="text-sm font-JakartaSemiBold text-green-600">Status: Completed</Text>
+                        <Text className="text-2xl font-JakartaBold text-gray-900">Trip Details</Text>
+                        <View className="mt-1">
+                            <RideStatusBadge status={ride.status} />
+                        </View>
                     </View>
                     <TouchableOpacity onPress={() => router.replace("/(root)/(tabs)/home")} className="w-10 h-10 bg-gray-100 rounded-full justify-center items-center">
                         <Image source={icons.backArrow} className="w-6 h-6" resizeMode="contain" />
@@ -104,12 +107,7 @@ const DriverRideHistoryDetails = () => {
                     <View className="flex-row items-center justify-between mb-4">
                         <View className="flex-row items-center gap-2">
                             <Image source={icons.calendar} className="w-5 h-5 text-gray-500" />
-                            <Text className="text-md font-JakartaBold">{formatDate(ride.created_at)}</Text>
-                        </View>
-                        <View className={`px-3 py-1 rounded-full ${ride.payment_status === 'paid' ? 'bg-green-100' : 'bg-red-100'}`}>
-                            <Text className={`text-xs capitalize font-JakartaBold ${ride.payment_status === 'paid' ? 'text-green-700' : 'text-red-700'}`}>
-                                {ride.payment_status}
-                            </Text>
+                            <Text className="text-md font-JakartaBold text-gray-800">{formatDate(ride.created_at)}</Text>
                         </View>
                     </View>
 
@@ -124,6 +122,54 @@ const DriverRideHistoryDetails = () => {
                         ) : (
                             <Text className="font-JakartaBold">-</Text>
                         )}
+                    </View>
+                </View>
+
+                {/* Route Details Section */}
+                <Text className="text-lg font-JakartaBold mb-3 text-gray-900">Route Map</Text>
+                <View className="bg-gray-50/50 p-6 rounded-3xl mb-6 border border-gray-100 overflow-hidden">
+                    {/* Vertical Line Container */}
+                    <View className="relative">
+                        {/* Pickup */}
+                        <View className="flex-row items-start mb-8 relative z-10">
+                            <View className="items-center mr-5 mt-1">
+                                <View className="w-4 h-4 rounded-full border-[3px] border-emerald-500 bg-white shadow-sm" />
+                            </View>
+                            <View className="flex-1">
+                                <Text className="text-[10px] font-JakartaBold text-gray-400 uppercase tracking-[2px] mb-1.5 leading-tight">Pickup Point</Text>
+                                <Text className="text-[15px] font-JakartaSemiBold text-gray-900 leading-snug">{ride.origin_address}</Text>
+                            </View>
+                        </View>
+
+                        {/* Dashed Tracking Line */}
+                        <View className="absolute left-[7.5px] top-[24px] w-[1px] h-[58px] border-l border-dashed border-gray-300 z-0" />
+
+                        {/* Dropoff */}
+                        <View className="flex-row items-start relative z-10">
+                            <View className="items-center mr-5 mt-1">
+                                <View className="w-4 h-4 rounded-sm bg-emerald-600 shadow-sm" />
+                            </View>
+                            <View className="flex-1">
+                                <Text className="text-[10px] font-JakartaBold text-gray-400 uppercase tracking-[2px] mb-1.5 leading-tight">Dropoff Destination</Text>
+                                <Text className="text-[15px] font-JakartaSemiBold text-gray-900 leading-snug">{ride.destination_address}</Text>
+                            </View>
+                        </View>
+                    </View>
+                </View>
+
+                {/* Secure Payment Summary */}
+                <Text className="text-lg font-JakartaBold mb-3 text-gray-900">Billing Detail</Text>
+                <View className="bg-gray-50/80 p-5 rounded-2xl mb-6 border border-gray-100">
+                    <View className="flex-row items-center justify-between">
+                        <View className="flex-row items-center gap-3">
+                            <View className={`w-2 h-2 rounded-full ${ride.payment_status === 'paid' ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                            <Text className="text-gray-600 font-JakartaMedium">Payout Status</Text>
+                        </View>
+                        <View className={`px-4 py-1.5 rounded-full ${ride.payment_status === 'paid' ? 'bg-emerald-50' : 'bg-red-50'}`}>
+                            <Text className={`text-xs capitalize font-JakartaExtraBold ${ride.payment_status === 'paid' ? 'text-emerald-700' : 'text-red-700'}`}>
+                                {ride.payment_status}
+                            </Text>
+                        </View>
                     </View>
                 </View>
 

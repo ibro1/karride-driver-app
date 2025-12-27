@@ -48,6 +48,7 @@ declare interface Ride {
   ride_time: number;
   fare_price: number;
   payment_status: string;
+  status: string;
   driver_id: number;
   user_id: string;
   created_at: string;
