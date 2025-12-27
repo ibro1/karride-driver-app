@@ -52,22 +52,22 @@ const PayoutHistory = () => {
                         <View className="flex-row justify-between items-center bg-white p-4 rounded-xl border border-neutral-100 mb-3 shadow-sm">
                             <View className="flex-1 mr-4">
                                 <Text className="text-base font-JakartaBold text-neutral-800 mb-1">
-                                    {item.type === 'withdrawal' ? 'Cash Out' : 'Transaction'}
+                                    {item.type === 'withdrawal' ? 'Cash Out' : 'Trip Earned'}
                                 </Text>
                                 <Text className="text-xs text-neutral-500 mb-1">
                                     {formatDate(item.createdAt)} • {formatTimeOfDay(item.createdAt)}
                                 </Text>
                                 <Text className="text-xs text-neutral-400" numberOfLines={1}>
-                                    {item.description}
+                                    {item.description || (item.type === 'withdrawal' ? 'Bank Transfer' : 'Ride Income')}
                                 </Text>
                             </View>
                             <View className="items-end">
                                 <Text className="text-lg font-JakartaBold text-neutral-800 mb-1">
-                                    ₦{item.amount?.toFixed(2)}
+                                    {item.type === 'withdrawal' ? '-' : '+'}₦{item.amount?.toFixed(2)}
                                 </Text>
                                 <View className={`px-2 py-1 rounded-full ${getStatusColor(item.status)}`}>
                                     <Text className={`text-[10px] font-JakartaBold capitalize ${getStatusColor(item.status).split(' ')[0]}`}>
-                                        {item.status}
+                                        {item.type === 'withdrawal' ? item.status : 'Settled'}
                                     </Text>
                                 </View>
                             </View>

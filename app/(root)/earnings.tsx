@@ -109,7 +109,7 @@ const Earnings = () => {
                 </Text>
                 <View className="bg-emerald-50 px-2 py-0.5 rounded-lg mt-1 border border-emerald-100">
                   <Text className="text-[9px] font-JakartaBold text-emerald-600 uppercase tracking-widest">
-                    {item.paymentStatus || "Paid"}
+                    Earned
                   </Text>
                 </View>
               </View>
