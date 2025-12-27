@@ -104,7 +104,6 @@ export const onboarding = [
     image: images.onboarding3,
   },
 ];
-
 export const data = {
   onboarding,
 };
