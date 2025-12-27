@@ -8,7 +8,8 @@ import { useFetch } from "@/lib/fetch";
 import { useUser } from "@/lib/auth-context";
 import { formatDate, formatTime } from "@/lib/utils";
 
-import { SummaryCardSkeleton, EarningsItemSkeleton } from "@/components/EarningsSkeleton";
+import { EarningsItemSkeleton } from "@/components/EarningsSkeleton";
+import Skeleton from "@/components/Skeleton";
 
 const Earnings = () => {
   const { user } = useUser();
@@ -41,52 +42,63 @@ const Earnings = () => {
         contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
         ListHeaderComponent={() => (
           <View className="mb-6">
-            {loading ? (
-              <SummaryCardSkeleton />
-            ) : (
-              /* Summary Card - Premium Emerald Look */
-              <View className="bg-emerald-600 rounded-[36px] p-8 shadow-2xl shadow-emerald-200 overflow-hidden relative">
-                {/* Decorative Pattern / Glass Glow */}
-                <View className="absolute -top-12 -right-12 w-48 h-48 bg-white/20 rounded-full blur-3xl" />
-                <View className="absolute -bottom-10 -left-10 w-32 h-32 bg-emerald-400/20 rounded-full blur-2xl" />
+            {/* Summary Card - Premium Emerald Look */}
+            <View className="bg-emerald-600 rounded-[36px] p-8 shadow-2xl shadow-emerald-200 overflow-hidden relative">
+              {/* Decorative Pattern / Glass Glow */}
+              <View className="absolute -top-12 -right-12 w-48 h-48 bg-white/20 rounded-full blur-3xl" />
+              <View className="absolute -bottom-10 -left-10 w-32 h-32 bg-emerald-400/20 rounded-full blur-2xl" />
 
-                <Text className="text-emerald-100 text-xs font-JakartaBold mb-1 uppercase tracking-widest">Available Balance</Text>
+              <Text className="text-emerald-100 text-xs font-JakartaBold mb-1 uppercase tracking-widest">Available Balance</Text>
+
+              {loading ? (
+                <View className="mb-8 mt-2">
+                  <Skeleton width={200} height={40} borderRadius={12} style={{ backgroundColor: "#ffffff20", opacity: 0.5 }} />
+                </View>
+              ) : (
                 <Text className="text-white text-5xl font-JakartaExtraBold mb-8">
                   ₦{earningsData?.available_balance?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
                 </Text>
+              )}
 
-                <View className="flex-row gap-4 mb-8">
-                  <View className="flex-1 bg-white/10 rounded-[24px] p-4 border border-white/20">
-                    <Text className="text-emerald-100 text-[10px] font-JakartaBold uppercase tracking-tighter mb-1">Today</Text>
+              <View className="flex-row gap-4 mb-8">
+                <View className="flex-1 bg-white/10 rounded-[24px] p-4 border border-white/20">
+                  <Text className="text-emerald-100 text-[10px] font-JakartaBold uppercase tracking-tighter mb-1">Today</Text>
+                  {loading ? (
+                    <Skeleton width={80} height={20} borderRadius={6} style={{ backgroundColor: "#ffffff20", opacity: 0.5 }} />
+                  ) : (
                     <Text className="text-white text-xl font-JakartaBold">
                       ₦{earningsData?.today_earnings?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
                     </Text>
-                  </View>
-                  <View className="flex-1 bg-white/10 rounded-[24px] p-4 border border-white/20">
-                    <Text className="text-emerald-100 text-[10px] font-JakartaBold uppercase tracking-tighter mb-1">Trips</Text>
+                  )}
+                </View>
+                <View className="flex-1 bg-white/10 rounded-[24px] p-4 border border-white/20">
+                  <Text className="text-emerald-100 text-[10px] font-JakartaBold uppercase tracking-tighter mb-1">Trips</Text>
+                  {loading ? (
+                    <Skeleton width={40} height={20} borderRadius={6} style={{ backgroundColor: "#ffffff20", opacity: 0.5 }} />
+                  ) : (
                     <Text className="text-white text-xl font-JakartaBold">
                       {earningsData?.today_rides || 0}
                     </Text>
-                  </View>
-                </View>
-
-                <View className="flex-row gap-4">
-                  <TouchableOpacity
-                    onPress={() => router.push("/(root)/wallet/withdraw" as any)}
-                    className="flex-1 bg-white py-4 rounded-2xl items-center shadow-lg shadow-emerald-900/10"
-                  >
-                    <Text className="text-emerald-600 font-JakartaBold text-lg">Cash Out</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    onPress={() => router.push("/(root)/wallet/add-bank")}
-                    className="flex-1 bg-emerald-500 py-4 rounded-2xl items-center border border-emerald-400"
-                  >
-                    <Text className="text-white font-JakartaBold text-lg">Bank Info</Text>
-                  </TouchableOpacity>
+                  )}
                 </View>
               </View>
-            )}
+
+              <View className="flex-row gap-4">
+                <TouchableOpacity
+                  onPress={() => router.push("/(root)/wallet/withdraw" as any)}
+                  className="flex-1 bg-white py-4 rounded-2xl items-center shadow-lg shadow-emerald-900/10"
+                >
+                  <Text className="text-emerald-600 font-JakartaBold text-lg">Cash Out</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => router.push("/(root)/wallet/add-bank")}
+                  className="flex-1 bg-emerald-500 py-4 rounded-2xl items-center border border-emerald-400"
+                >
+                  <Text className="text-white font-JakartaBold text-lg">Bank Info</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
 
             <View className="mt-10 flex-row items-center justify-between mb-4 px-1">
               <Text className="text-2xl font-JakartaExtraBold text-gray-900">Recent Trips</Text>
