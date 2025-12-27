@@ -8,6 +8,8 @@ import { useFetch } from "@/lib/fetch";
 import { useUser } from "@/lib/auth-context";
 import { formatDate, formatTime } from "@/lib/utils";
 
+import { SummaryCardSkeleton, EarningsItemSkeleton } from "@/components/EarningsSkeleton";
+
 const Earnings = () => {
   const { user } = useUser();
   const { data: earningsData, loading, error, refetch } = useFetch<any>(`/api/driver/${user?.id}/earnings`);
@@ -17,6 +19,11 @@ const Earnings = () => {
       refetch();
     }, [])
   );
+
+  // Use dummy data for skeleton loaders when loading
+  const listData = loading
+    ? [1, 2, 3, 4, 5] // Dummy items for skeleton list
+    : (earningsData?.recent_rides || []);
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -28,18 +35,16 @@ const Earnings = () => {
         <Text className="text-xl font-JakartaBold text-neutral-800">Earnings</Text>
       </View>
 
-      {loading ? (
-        <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#0369a1" />
-        </View>
-      ) : (
-        <FlatList
-          data={earningsData?.recent_rides || []}
-          keyExtractor={(item) => item.rideId?.toString() || Math.random().toString()}
-          contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
-          ListHeaderComponent={() => (
-            <View className="mb-6">
-              {/* Summary Card - Premium Emerald Look */}
+      <FlatList
+        data={listData}
+        keyExtractor={(item, index) => loading ? `skeleton-${index}` : (item.rideId?.toString() || Math.random().toString())}
+        contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
+        ListHeaderComponent={() => (
+          <View className="mb-6">
+            {loading ? (
+              <SummaryCardSkeleton />
+            ) : (
+              /* Summary Card - Premium Emerald Look */
               <View className="bg-emerald-600 rounded-[36px] p-8 shadow-2xl shadow-emerald-200 overflow-hidden relative">
                 {/* Decorative Pattern / Glass Glow */}
                 <View className="absolute -top-12 -right-12 w-48 h-48 bg-white/20 rounded-full blur-3xl" />
@@ -81,55 +86,59 @@ const Earnings = () => {
                   </TouchableOpacity>
                 </View>
               </View>
+            )}
 
-              <View className="mt-10 flex-row items-center justify-between mb-4 px-1">
-                <Text className="text-2xl font-JakartaExtraBold text-gray-900">Recent Trips</Text>
+            <View className="mt-10 flex-row items-center justify-between mb-4 px-1">
+              <Text className="text-2xl font-JakartaExtraBold text-gray-900">Recent Trips</Text>
+              {!loading && (
                 <TouchableOpacity onPress={() => router.push("/(tabs)/rides")}>
                   <Text className="text-sm font-JakartaBold text-emerald-600">See All</Text>
                 </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        )}
+        renderItem={({ item }) => loading ? (
+          <EarningsItemSkeleton />
+        ) : (
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => router.push(`/(root)/ride-history/${item.rideId}` as any)}
+            style={{ elevation: 5 }}
+            className="flex-row items-center bg-white p-5 rounded-[24px] mb-4 shadow-xl shadow-neutral-300/50 border border-gray-100"
+          >
+            <View className="w-12 h-12 rounded-2xl bg-emerald-50 items-center justify-center mr-4">
+              <Image source={icons.to} className="w-5 h-5" tintColor="#10b981" />
+            </View>
+
+            <View className="flex-1">
+              <Text className="text-[15px] font-JakartaBold text-gray-900 mb-0.5" numberOfLines={1}>
+                Ride #{item.rideId}
+              </Text>
+              <Text className="text-xs font-JakartaMedium text-gray-400">
+                {formatDate(item.createdAt)}
+              </Text>
+            </View>
+
+            <View className="items-end">
+              <Text className="text-lg font-JakartaExtraBold text-emerald-600">
+                +₦{(item.driverPayout ?? item.farePrice ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </Text>
+              <View className="bg-emerald-50 px-2 py-0.5 rounded-lg mt-1 border border-emerald-100">
+                <Text className="text-[9px] font-JakartaBold text-emerald-600 uppercase tracking-widest">
+                  Earned
+                </Text>
               </View>
             </View>
-          )}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={() => router.push(`/(root)/ride-history/${item.rideId}` as any)}
-              style={{ elevation: 5 }}
-              className="flex-row items-center bg-white p-5 rounded-[24px] mb-4 shadow-xl shadow-neutral-300/50 border border-gray-100"
-            >
-              <View className="w-12 h-12 rounded-2xl bg-emerald-50 items-center justify-center mr-4">
-                <Image source={icons.to} className="w-5 h-5" tintColor="#10b981" />
-              </View>
-
-              <View className="flex-1">
-                <Text className="text-[15px] font-JakartaBold text-gray-900 mb-0.5" numberOfLines={1}>
-                  Ride #{item.rideId}
-                </Text>
-                <Text className="text-xs font-JakartaMedium text-gray-400">
-                  {formatDate(item.createdAt)}
-                </Text>
-              </View>
-
-              <View className="items-end">
-                <Text className="text-lg font-JakartaExtraBold text-emerald-600">
-                  +₦{(item.driverPayout ?? item.farePrice ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </Text>
-                <View className="bg-emerald-50 px-2 py-0.5 rounded-lg mt-1 border border-emerald-100">
-                  <Text className="text-[9px] font-JakartaBold text-emerald-600 uppercase tracking-widest">
-                    Earned
-                  </Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-          )}
-          ListEmptyComponent={() => (
-            <View className="items-center py-20">
-              <Image source={noResultImage} className="w-40 h-40 opacity-20 mb-4" resizeMode="contain" />
-              <Text className="text-gray-400 font-JakartaMedium text-lg text-center">No service earnings yet</Text>
-            </View>
-          )}
-        />
-      )}
+          </TouchableOpacity>
+        )}
+        ListEmptyComponent={() => !loading && (
+          <View className="items-center py-20">
+            <Image source={noResultImage} className="w-40 h-40 opacity-20 mb-4" resizeMode="contain" />
+            <Text className="text-gray-400 font-JakartaMedium text-lg text-center">No service earnings yet</Text>
+          </View>
+        )}
+      />
     </SafeAreaView>
   );
 };
