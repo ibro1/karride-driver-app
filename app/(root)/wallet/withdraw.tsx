@@ -1,15 +1,23 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, ActivityIndicator, Alert, Modal, FlatList } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { icons } from "@/constants";
 import { fetchAPI, useFetch } from "@/lib/fetch";
 import { useUser } from "@/lib/auth-context";
 
 const Withdraw = () => {
     // const { user } = useUser(); // Don't rely on stale user context
-    const { data: banksData, loading: loadingBanks } = useFetch<any>("/api/driver/bank/list");
-    const { data: balanceData, loading: loadingBalance } = useFetch<any>("/api/driver/balance");
+    const { data: banksData, loading: loadingBanks, refetch: refetchBanks } = useFetch<any>("/api/driver/bank/list");
+    const { data: balanceData, loading: loadingBalance, refetch: refetchBalance } = useFetch<any>("/api/driver/balance");
+
+    // Revalidate data when screen comes into focus
+    useFocusEffect(
+        useCallback(() => {
+            refetchBanks();
+            refetchBalance();
+        }, [])
+    );
 
     const [amount, setAmount] = useState("");
     const [loading, setLoading] = useState(false);
@@ -101,12 +109,12 @@ const Withdraw = () => {
                     </View>
                 ) : defaultBank ? (
                     <View className="bg-white border border-neutral-200 rounded-xl p-4 flex-row items-center justify-between">
-                        <View className="flex-row items-center">
+                        <View className="flex-row items-center flex-1 mr-2">
                             <View className="w-12 h-12 bg-neutral-100 rounded-full items-center justify-center mr-3">
                                 <Image source={icons.checkmark} className="w-6 h-6 tint-neutral-600" resizeMode="contain" />
                             </View>
-                            <View>
-                                <Text className="font-JakartaBold text-neutral-800 text-lg">{defaultBank.bankName}</Text>
+                            <View className="flex-1 mr-2">
+                                <Text className="font-JakartaBold text-neutral-800 text-lg" numberOfLines={1}>{defaultBank.bankName}</Text>
                                 <Text className="text-neutral-500 font-JakartaMedium">{defaultBank.accountNumber}</Text>
                             </View>
                         </View>

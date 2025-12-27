@@ -1,6 +1,7 @@
+import { useState, useCallback } from "react";
 import { View, Text, FlatList, ActivityIndicator, Image, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { icons, images } from "@/constants";
 const noResultImage = images.noResult;
 import { useFetch } from "@/lib/fetch";
@@ -9,7 +10,13 @@ import { formatDate, formatTime } from "@/lib/utils";
 
 const Earnings = () => {
   const { user } = useUser();
-  const { data: earningsData, loading, error } = useFetch<any>(`/api/driver/${user?.id}/earnings`);
+  const { data: earningsData, loading, error, refetch } = useFetch<any>(`/api/driver/${user?.id}/earnings`);
+
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [])
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -40,7 +47,7 @@ const Earnings = () => {
 
                 <Text className="text-emerald-100 text-xs font-JakartaBold mb-1 uppercase tracking-widest">Available Balance</Text>
                 <Text className="text-white text-5xl font-JakartaExtraBold mb-8">
-                  ₦{earningsData?.total_earnings?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
+                  ₦{earningsData?.available_balance?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
                 </Text>
 
                 <View className="flex-row gap-4 mb-8">

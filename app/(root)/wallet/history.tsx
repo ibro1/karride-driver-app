@@ -1,14 +1,27 @@
-import { View, Text, FlatList, ActivityIndicator, Image, TouchableOpacity } from "react-native";
+import { useState, useCallback } from "react";
+import { View, Text, FlatList, ActivityIndicator, Image, TouchableOpacity, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { icons, images } from "@/constants";
 const noResultImage = images.noResult;
 import { useFetch } from "@/lib/fetch";
 import { formatDate } from "@/lib/utils";
 
 const PayoutHistory = () => {
-    const { data: historyData, loading, error } = useFetch<any>("/api/driver/transactions");
-    const transactions = historyData?.data || [];
+    const { data: historyData, loading, error, refetch } = useFetch<any>("/api/driver/transactions");
+
+    // Robust parsing to handle both { data: [...] } and [...] formats
+    const rawData = historyData?.data || historyData;
+    const transactions = Array.isArray(rawData) ? rawData : [];
+
+    console.log("HISTORY DATA RECEIVED:", JSON.stringify(historyData, null, 2));
+    console.log("TRANSACTIONS COUNT:", transactions.length);
+
+    useFocusEffect(
+        useCallback(() => {
+            refetch();
+        }, [])
+    );
 
     const formatTimeOfDay = (dateString: string) => {
         const date = new Date(dateString);
@@ -42,6 +55,9 @@ const PayoutHistory = () => {
                     data={transactions}
                     keyExtractor={(item) => item.id.toString()}
                     contentContainerStyle={{ padding: 20 }}
+                    refreshControl={
+                        <RefreshControl refreshing={loading} onRefresh={refetch} colors={["#059669"]} />
+                    }
                     ListEmptyComponent={() => (
                         <View className="items-center py-10">
                             <Image source={noResultImage} className="w-40 h-40" resizeMode="contain" />
