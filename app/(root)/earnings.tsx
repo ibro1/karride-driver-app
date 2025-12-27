@@ -84,7 +84,7 @@ const Earnings = () => {
 
               <View className="mt-10 flex-row items-center justify-between mb-4 px-1">
                 <Text className="text-2xl font-JakartaExtraBold text-gray-900">Recent Trips</Text>
-                <TouchableOpacity onPress={() => router.push("/(root)/ride-history" as any)}>
+                <TouchableOpacity onPress={() => router.push("/(tabs)/rides")}>
                   <Text className="text-sm font-JakartaBold text-emerald-600">See All</Text>
                 </TouchableOpacity>
               </View>
