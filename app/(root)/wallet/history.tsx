@@ -35,7 +35,7 @@ const PayoutHistory = () => {
 
             {loading ? (
                 <View className="flex-1 justify-center items-center">
-                    <ActivityIndicator size="large" color="#0286FF" />
+                    <ActivityIndicator size="large" color="#059669" />
                 </View>
             ) : (
                 <FlatList

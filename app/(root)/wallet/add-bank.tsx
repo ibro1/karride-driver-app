@@ -162,7 +162,7 @@ const AddBank = () => {
 
                         {resolving && (
                             <View className="flex-row items-center justify-center mb-6">
-                                <ActivityIndicator size="small" color="#0286FF" />
+                                <ActivityIndicator size="small" color="#059669" />
                                 <Text className="text-neutral-500 ml-2 font-JakartaMedium">Verifying account...</Text>
                             </View>
                         )}
@@ -182,7 +182,7 @@ const AddBank = () => {
                         <TouchableOpacity
                             onPress={handleSave}
                             disabled={!resolvedName || saving}
-                            className={`w-full py-4 rounded-full items-center mt-4 ${(!resolvedName || saving) ? 'bg-neutral-300' : 'bg-[#0286FF]'}`}
+                            className={`w-full py-4 rounded-full items-center mt-4 ${(!resolvedName || saving) ? 'bg-neutral-300' : 'bg-emerald-600'}`}
                         >
                             {saving ? (
                                 <ActivityIndicator color="white" />
@@ -220,7 +220,7 @@ const AddBank = () => {
                     </View>
 
                     {loadingBanks ? (
-                        <ActivityIndicator size="large" color="#0286FF" className="mt-10" />
+                        <ActivityIndicator size="large" color="#059669" className="mt-10" />
                     ) : (
                         <FlatList
                             data={filteredBanks}
