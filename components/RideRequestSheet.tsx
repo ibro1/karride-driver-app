@@ -15,6 +15,7 @@ interface RideRequestSheetProps {
         ride_time?: number;
         rideTime?: number;
         distance?: number;
+        rideDistanceKm?: number;
     } | null;
     onAccept: () => void;
     onDecline: () => void;
@@ -31,6 +32,7 @@ const RideRequestSheet = ({ request, onAccept, onDecline, loading, declineLoadin
     const destination = request.destination_address || request.destinationAddress;
     const price = request.fare_price || request.farePrice;
     const time = request.ride_time || request.rideTime;
+    const distance = request.distance || request.rideDistanceKm || 0;
 
     return (
         <BottomSheet snapPoints={snapPoints} index={0} enablePanDownToClose={false}>
@@ -61,7 +63,7 @@ const RideRequestSheet = ({ request, onAccept, onDecline, loading, declineLoadin
                     </View>
                     <View className="flex flex-col">
                         <Text className="text-gray-500 text-sm font-JakartaMedium">Distance</Text>
-                        <Text className="text-lg font-JakartaBold">{(request.distance || 0).toFixed(1)} km</Text>
+                        <Text className="text-lg font-JakartaBold">{distance.toFixed(1)} km</Text>
                     </View>
                     <View className="flex flex-col">
                         <Text className="text-gray-500 text-sm font-JakartaMedium">Time</Text>
