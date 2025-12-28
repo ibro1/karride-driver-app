@@ -266,47 +266,87 @@ const DriverHome = () => {
 
     return (
         <View className="flex-1 bg-white">
-            {/* Header */}
-            <View className="absolute top-14 left-0 right-0 z-10 flex-col px-5 pointer-events-none">
-                <View className="flex-row justify-between items-center w-full">
-                    {/* Empty View to maintain center alignment for toggle */}
-                    <View className="w-12 h-12" />
+            {/* Header Card with Branding and Online Toggle */}
+            <View className="absolute top-12 left-4 right-4 z-10">
+                <View className="bg-white rounded-3xl shadow-lg shadow-neutral-300 p-5">
+                    {/* Top Row: Branding + Status Indicator */}
+                    <View className="flex-row justify-between items-start mb-4">
+                        <View className="flex-1">
+                            <View className="flex-row items-center gap-x-2 mb-1">
+                                <Text className="text-[#9D00FF] font-JakartaBold text-lg">KarRide</Text>
+                                <Text className="text-neutral-300 font-JakartaBold text-lg">Driver</Text>
+                            </View>
+                            {isInitializingLocation ? (
+                                <Skeleton width={150} height={16} borderRadius={4} />
+                            ) : (
+                                <Text className="text-neutral-600 font-JakartaMedium text-sm" numberOfLines={1}>
+                                    Welcome, {user?.firstName || user?.name?.split(' ')[0] || 'Driver'} 👋
+                                </Text>
+                            )}
+                        </View>
 
-                    {/* Online Toggle (Centered Button) */}
+                        {/* Status Dot */}
+                        <View className={`flex-row items-center px-3 py-1.5 rounded-full ${isOnline ? 'bg-green-100' : 'bg-neutral-100'}`}>
+                            <View className={`w-2 h-2 rounded-full mr-1.5 ${isOnline ? 'bg-green-500' : 'bg-neutral-400'}`} />
+                            <Text className={`font-JakartaSemiBold text-xs ${isOnline ? 'text-green-700' : 'text-neutral-500'}`}>
+                                {isOnline ? 'Online' : 'Offline'}
+                            </Text>
+                        </View>
+                    </View>
+
+                    {/* Verification Warning */}
+                    {verificationStatus && verificationStatus !== "verified" && (
+                        <View className="bg-red-50 border border-red-200 p-3 rounded-xl mb-4">
+                            <Text className="text-red-600 font-JakartaBold text-sm">⚠️ Account Under Review</Text>
+                            <Text className="text-red-500 text-xs mt-0.5">
+                                {verificationStatus === "rejected" ? "Your documents were rejected." : "We're verifying your documents."}
+                            </Text>
+                        </View>
+                    )}
+
+                    {/* Main Toggle Button */}
                     {isInitializingLocation ? (
-                        <View className="bg-white rounded-full px-6 py-3 shadow-md pointer-events-auto">
-                            <Skeleton width={100} height={20} borderRadius={10} />
+                        <View className="h-14 bg-neutral-100 rounded-2xl items-center justify-center">
+                            <ActivityIndicator size="small" color="#9D00FF" />
                         </View>
                     ) : (
                         <TouchableOpacity
                             onPress={toggleOnlineStatus}
-                            disabled={isTogglingStatus}
-                            className={`flex-row items-center justify-center rounded-full px-6 py-3 shadow-md pointer-events-auto ${isOnline ? "bg-green-500" : (verificationStatus === "verified" ? "bg-orange-500" : "bg-gray-400")} ${isTogglingStatus ? "opacity-70" : ""}`}
+                            disabled={isTogglingStatus || (verificationStatus !== "verified")}
+                            activeOpacity={0.8}
+                            className={`h-14 rounded-2xl flex-row items-center justify-center ${verificationStatus !== "verified"
+                                    ? "bg-neutral-200"
+                                    : isOnline
+                                        ? "bg-red-500"
+                                        : "bg-[#9D00FF]"
+                                } ${isTogglingStatus ? "opacity-70" : ""}`}
                         >
                             {isTogglingStatus ? (
-                                <ActivityIndicator size="small" color="#fff" className="mr-2" />
+                                <ActivityIndicator size="small" color="#fff" />
                             ) : (
-                                <View className="w-2 h-2 rounded-full bg-white mr-2" />
+                                <>
+                                    <Text className="text-white font-JakartaBold text-base mr-2">
+                                        {verificationStatus !== "verified"
+                                            ? "Cannot Go Online"
+                                            : isOnline
+                                                ? "Tap to Go Offline"
+                                                : "Tap to Go Online"}
+                                    </Text>
+                                    <View className={`w-6 h-6 rounded-full items-center justify-center ${isOnline ? 'bg-red-400' : 'bg-white/20'}`}>
+                                        <Text className="text-white text-xs">{isOnline ? '✕' : '→'}</Text>
+                                    </View>
+                                </>
                             )}
-                            <Text className="text-white font-JakartaBold text-sm">
-                                {isTogglingStatus ? "Updating..." : (isOnline ? "Go Offline" : "Go Online")}
-                            </Text>
                         </TouchableOpacity>
                     )}
 
-                    {/* Empty View for Balance */}
-                    <View className="w-12" />
-                </View>
-
-                {/* Verification Warning Banner */}
-                {verificationStatus && verificationStatus !== "verified" && (
-                    <View className="mt-4 bg-red-500 p-3 rounded-xl shadow-lg pointer-events-auto">
-                        <Text className="text-white font-JakartaBold text-center">Account Under Review</Text>
-                        <Text className="text-white text-xs text-center mt-1">
-                            {verificationStatus === "rejected" ? "Your documents were rejected. Please update them." : "We are verifying your documents. You cannot go online yet."}
+                    {/* Helper Text */}
+                    {!isInitializingLocation && verificationStatus === "verified" && (
+                        <Text className="text-neutral-400 text-[10px] text-center mt-2 uppercase tracking-wide font-JakartaBold">
+                            {isOnline ? "You're receiving ride requests" : "Go online to receive ride requests"}
                         </Text>
-                    </View>
-                )}
+                    )}
+                </View>
             </View>
 
             {/* Map Section */}
