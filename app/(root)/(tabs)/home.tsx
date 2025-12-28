@@ -272,10 +272,7 @@ const DriverHome = () => {
                     {/* Top Row: Branding + Status Indicator */}
                     <View className="flex-row justify-between items-start mb-4">
                         <View className="flex-1">
-                            <View className="flex-row items-center gap-x-2 mb-1">
-                                <Text className="text-[#9D00FF] font-JakartaBold text-lg">KarRide</Text>
-                                <Text className="text-neutral-300 font-JakartaBold text-lg">Driver</Text>
-                            </View>
+                            <Text className="text-[#9D00FF] font-JakartaBold text-xl mb-1">KarRide</Text>
                             {isInitializingLocation ? (
                                 <Skeleton width={150} height={16} borderRadius={4} />
                             ) : (
@@ -315,10 +312,10 @@ const DriverHome = () => {
                             disabled={isTogglingStatus || (verificationStatus !== "verified")}
                             activeOpacity={0.8}
                             className={`h-14 rounded-2xl flex-row items-center justify-center ${verificationStatus !== "verified"
-                                    ? "bg-neutral-200"
-                                    : isOnline
-                                        ? "bg-red-500"
-                                        : "bg-[#9D00FF]"
+                                ? "bg-neutral-200"
+                                : isOnline
+                                    ? "bg-red-500"
+                                    : "bg-[#9D00FF]"
                                 } ${isTogglingStatus ? "opacity-70" : ""}`}
                         >
                             {isTogglingStatus ? (

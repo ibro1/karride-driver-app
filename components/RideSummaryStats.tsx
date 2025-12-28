@@ -17,32 +17,36 @@ const RideSummaryStats = ({ rides }: RideSummaryStatsProps) => {
         : 'N/A';
 
     return (
-        <View className="mb-8 overflow-hidden rounded-[32px] shadow-2xl shadow-emerald-500/10 border border-white/20">
-            <BlurView intensity={80} tint="light" className="flex-row justify-between p-7 bg-white/40">
+        <View className="mb-8 overflow-hidden rounded-[32px] shadow-xl shadow-neutral-200 border border-neutral-100 bg-white">
+            <View className="flex-row justify-between p-6">
                 <View className="items-center flex-1">
-                    <Text className="text-gray-400 text-[10px] font-JakartaBold mb-1 uppercase tracking-widest">Trips</Text>
-                    <Text className="text-2xl font-JakartaExtraBold text-gray-900">{completedRides.length}</Text>
+                    <Text className="text-neutral-400 text-[9px] font-JakartaBold mb-1 uppercase tracking-wider">Trips</Text>
+                    <Text className="text-xl font-JakartaExtraBold text-neutral-900">{completedRides.length}</Text>
                 </View>
 
-                <View className="w-[1px] h-10 bg-gray-200/50 self-center" />
+                <View className="w-[1px] h-8 bg-neutral-100 self-center" />
 
-                <View className="items-center flex-1">
-                    <Text className="text-gray-400 text-[10px] font-JakartaBold mb-1 uppercase tracking-widest">Net Earned</Text>
-                    <Text className="text-2xl font-JakartaExtraBold text-emerald-600">
+                <View className="items-center flex-2 px-2">
+                    <Text className="text-neutral-400 text-[9px] font-JakartaBold mb-1 uppercase tracking-wider text-center">Net Earned</Text>
+                    <Text
+                        numberOfLines={1}
+                        adjustsFontSizeToFit
+                        className="text-xl font-JakartaExtraBold text-[#9D00FF]"
+                    >
                         ₦{totalEarnings.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                     </Text>
                 </View>
 
-                <View className="w-[1px] h-10 bg-gray-200/50 self-center" />
+                <View className="w-[1px] h-8 bg-neutral-100 self-center" />
 
                 <View className="items-center flex-1">
-                    <Text className="text-gray-400 text-[10px] font-JakartaBold mb-1 uppercase tracking-widest">Rating</Text>
+                    <Text className="text-neutral-400 text-[9px] font-JakartaBold mb-1 uppercase tracking-wider">Rating</Text>
                     <View className="flex-row items-center">
-                        <Text className="text-2xl font-JakartaExtraBold text-gray-900">{avgRating}</Text>
+                        <Text className="text-xl font-JakartaExtraBold text-neutral-900">{avgRating}</Text>
                         <Text className="text-amber-400 ml-1 text-base">★</Text>
                     </View>
                 </View>
-            </BlurView>
+            </View>
         </View>
     );
 };
