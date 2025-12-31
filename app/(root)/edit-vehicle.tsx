@@ -181,95 +181,105 @@ const EditVehicle = () => {
             return;
         }
 
-        setIsSubmitting(true);
-        try {
-            const token = await SecureStore.getItemAsync("session_token");
+        Alert.alert(
+            "Confirm Changes",
+            "Updating your vehicle details will require a new verification process. You will be temporarily unapproved and offline until the review is complete. Do you want to proceed?",
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Proceed",
+                    style: "destructive",
+                    onPress: async () => {
+                        setIsSubmitting(true);
+                        try {
+                            const token = await SecureStore.getItemAsync("session_token");
 
-            let finalCarImageUrl = profileData?.vehicle?.vehicleImageUrl;
+                            let finalCarImageUrl = profileData?.vehicle?.vehicleImageUrl;
 
-            // Upload car image if changed
-            if (carImage && carImage !== profileData?.vehicle?.vehicleImageUrl) {
-                console.log("Starting image upload...");
-                const uploadUrl = `${process.env.EXPO_PUBLIC_API_URL}/api/upload`;
+                            // Upload car image if changed
+                            if (carImage && carImage !== profileData?.vehicle?.vehicleImageUrl) {
+                                console.log("Starting image upload...");
+                                const uploadUrl = `${process.env.EXPO_PUBLIC_API_URL}/api/upload`;
 
-                // Prepare FormData
-                const formData = new FormData();
-                const filename = carImage.split('/').pop() || 'image.jpg';
-                const match = /\.(\w+)$/.exec(filename);
-                const type = match ? `image/${match[1]}` : 'image/jpeg';
+                                // Prepare FormData
+                                const formData = new FormData();
+                                const filename = carImage.split('/').pop() || 'image.jpg';
+                                const match = /\.(\w+)$/.exec(filename);
+                                const type = match ? `image/${match[1]}` : 'image/jpeg';
 
-                formData.append('file', {
-                    uri: Platform.OS === 'android' ? carImage : carImage.replace('file://', ''),
-                    name: filename,
-                    type: type,
-                } as any);
+                                formData.append('file', {
+                                    uri: Platform.OS === 'android' ? carImage : carImage.replace('file://', ''),
+                                    name: filename,
+                                    type: type,
+                                } as any);
 
-                // Use fetch for upload
-                const uploadResponse = await fetch(uploadUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Accept': 'application/json',
-                        // IMPORTANT: Do NOT set Content-Type header. 
-                        // The browser/runtime sets it automatically with the boundary for FormData.
-                    },
-                    body: formData,
-                });
+                                // Use fetch for upload
+                                const uploadResponse = await fetch(uploadUrl, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Authorization': `Bearer ${token}`,
+                                        'Accept': 'application/json',
+                                    },
+                                    body: formData,
+                                });
 
-                console.log("Upload status:", uploadResponse.status);
+                                console.log("Upload status:", uploadResponse.status);
 
-                if (uploadResponse.ok) {
-                    const uploadResult = await uploadResponse.json();
-                    finalCarImageUrl = uploadResult.url;
-                    console.log("Image upload success:", finalCarImageUrl);
-                } else {
-                    const errorText = await uploadResponse.text();
-                    console.error("Upload failed response:", errorText);
+                                if (uploadResponse.ok) {
+                                    const uploadResult = await uploadResponse.json();
+                                    finalCarImageUrl = uploadResult.url;
+                                    console.log("Image upload success:", finalCarImageUrl);
+                                } else {
+                                    const errorText = await uploadResponse.text();
+                                    console.error("Upload failed response:", errorText);
 
-                    let errorMessage = "Image upload failed";
-                    try {
-                        const errorJson = JSON.parse(errorText);
-                        errorMessage = errorJson.error || errorMessage;
-                    } catch (e) {
-                        // failing to parse json, use text or default
-                        if (uploadResponse.status === 500) errorMessage = "Server error during upload";
+                                    let errorMessage = "Image upload failed";
+                                    try {
+                                        const errorJson = JSON.parse(errorText);
+                                        errorMessage = errorJson.error || errorMessage;
+                                    } catch (e) {
+                                        if (uploadResponse.status === 500) errorMessage = "Server error during upload";
+                                    }
+
+                                    throw new Error(errorMessage);
+                                }
+                            }
+
+                            console.log("Saving vehicle data:", { ...form, finalCarImageUrl });
+
+                            const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/driver/vehicle`, {
+                                method: "PATCH",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "Authorization": `Bearer ${token}`,
+                                },
+                                body: JSON.stringify({
+                                    ...form,
+                                    year: parseInt(form.year),
+                                    carSeats: parseInt(form.carSeats),
+                                    carImageUrl: finalCarImageUrl,
+                                }),
+                            });
+
+                            const result = await response.json();
+
+                            if (!response.ok) {
+                                throw new Error(result.error || "Failed to update vehicle");
+                            }
+
+                            Alert.alert("Success", "Vehicle details updated. Your account is now under review.", [
+                                { text: "OK", onPress: () => router.back() }
+                            ]);
+                        } catch (error: any) {
+                            console.error("Update error:", error);
+                            Alert.alert("Error", error.message || "An unexpected error occurred");
+                        } finally {
+                            setIsSubmitting(false);
+                        }
                     }
-
-                    throw new Error(errorMessage);
                 }
-            }
-
-            console.log("Saving vehicle data:", { ...form, finalCarImageUrl });
-
-            const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/driver/vehicle`, {
-                method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    ...form,
-                    year: parseInt(form.year),
-                    carSeats: parseInt(form.carSeats),
-                    carImageUrl: finalCarImageUrl,
-                }),
-            });
-
-            const result = await response.json();
-
-            if (!response.ok) {
-                throw new Error(result.error || "Failed to update vehicle");
-            }
-
-            Alert.alert("Success", "Vehicle updated successfully", [
-                { text: "OK", onPress: () => router.back() }
-            ]);
-        } catch (error: any) {
-            console.error("Update error:", error);
-            Alert.alert("Error", error.message || "An unexpected error occurred");
-        } finally {
-            setIsSubmitting(false);
-        }
+            ]
+        );
     };
 
     if (loadingData) {
@@ -339,6 +349,7 @@ const EditVehicle = () => {
                     value={form.make}
                     onChangeText={(text) => setForm({ ...form, make: text })}
                     editable={!isSubmitting}
+                    labelStyle="ml-1"
                 />
 
                 <InputField
@@ -347,6 +358,7 @@ const EditVehicle = () => {
                     value={form.model}
                     onChangeText={(text) => setForm({ ...form, model: text })}
                     editable={!isSubmitting}
+                    labelStyle="ml-1"
                 />
 
                 <InputField
@@ -356,6 +368,7 @@ const EditVehicle = () => {
                     onChangeText={(text) => setForm({ ...form, year: text })}
                     keyboardType="numeric"
                     editable={!isSubmitting}
+                    labelStyle="ml-1"
                 />
 
                 <InputField
@@ -364,6 +377,7 @@ const EditVehicle = () => {
                     value={form.color}
                     onChangeText={(text) => setForm({ ...form, color: text })}
                     editable={!isSubmitting}
+                    labelStyle="ml-1"
                 />
 
                 <InputField
@@ -372,6 +386,7 @@ const EditVehicle = () => {
                     value={form.plateNumber}
                     onChangeText={(text) => setForm({ ...form, plateNumber: text })}
                     editable={!isSubmitting}
+                    labelStyle="ml-1"
                 />
 
                 <InputField
@@ -381,6 +396,7 @@ const EditVehicle = () => {
                     onChangeText={(text) => setForm({ ...form, carSeats: text })}
                     keyboardType="numeric"
                     editable={!isSubmitting}
+                    labelStyle="ml-1"
                 />
 
                 <CustomButton

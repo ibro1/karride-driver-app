@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Image, Text, View } from "react-native";
 
 interface AvatarProps {
@@ -9,6 +9,8 @@ interface AvatarProps {
 }
 
 const Avatar = ({ source, name, size = 12, className }: AvatarProps) => {
+    const [imageError, setImageError] = useState(false);
+
     const initials = name
         .split(" ")
         .map((n) => n[0])
@@ -22,36 +24,50 @@ const Avatar = ({ source, name, size = 12, className }: AvatarProps) => {
         source !== "null" &&
         source !== "undefined";
 
-    if (hasValidSource) {
-        let fullSource = source;
-        const apiUrl = process.env.EXPO_PUBLIC_API_URL || "";
-
-        if (source.includes("localhost") || source.includes("127.0.0.1")) {
-            // Replace localhost origin with API URL origin
-            // This handles both http://localhost:3000/path and localhost:3000/path
-            fullSource = source.replace(/https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/, apiUrl);
-        } else if (!source.startsWith("http")) {
-            fullSource = `${apiUrl}${source.startsWith("/") ? "" : "/"}${source}`;
-        }
-
+    // Show initials if no valid source OR if image failed to load
+    if (!hasValidSource || imageError) {
         return (
-            <Image
-                source={{ uri: fullSource }}
-                className={`rounded-full ${className}`}
+            <View
+                className={`rounded-full bg-blue-100 items-center justify-center ${className}`}
                 style={{ width: size * 4, height: size * 4 }}
-                onError={() => console.log("Failed to load avatar:", fullSource)}
-            />
+            >
+                <Text className="text-blue-600 font-JakartaBold text-lg">{initials}</Text>
+            </View>
         );
     }
 
+    let fullSource = source;
+    const apiUrl = process.env.EXPO_PUBLIC_API_URL || "";
+
+    // Fix URLs with /app/uploads (legacy issue)
+    if (fullSource.includes('/app/uploads/')) {
+        fullSource = fullSource.replace('/app/uploads/', '/uploads/');
+    }
+
+    // In development, replace production domain with local API URL
+    if (apiUrl && (apiUrl.includes('localhost') || apiUrl.includes('127.0.0.1') || apiUrl.match(/\d+\.\d+\.\d+\.\d+/))) {
+        fullSource = fullSource.replace('https://karride.ng', apiUrl);
+        fullSource = fullSource.replace('http://karride.ng', apiUrl);
+    }
+
+    if (source.includes("localhost") || source.includes("127.0.0.1")) {
+        fullSource = source.replace(/https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/, apiUrl);
+    } else if (!source.startsWith("http")) {
+        fullSource = `${apiUrl}${source.startsWith("/") ? "" : "/"}${source}`;
+    }
+
     return (
-        <View
-            className={`rounded-full bg-blue-100 items-center justify-center ${className}`}
+        <Image
+            source={{ uri: fullSource }}
+            className={`rounded-full ${className}`}
             style={{ width: size * 4, height: size * 4 }}
-        >
-            <Text className="text-blue-600 font-JakartaBold text-lg">{initials}</Text>
-        </View>
+            onError={() => {
+                console.log("Failed to load avatar:", fullSource);
+                setImageError(true);
+            }}
+        />
     );
 };
 
 export default Avatar;
+

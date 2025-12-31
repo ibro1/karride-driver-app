@@ -99,36 +99,49 @@ const EditProfile = () => {
             return;
         }
 
-        setIsSubmitting(true);
-        try {
-            const token = await SecureStore.getItemAsync("session_token");
-            const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/driver/profile`, {
-                method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    firstName: form.firstName,
-                    lastName: form.lastName,
-                    profileImageUrl: form.profileImageUrl,
-                }),
-            });
+        Alert.alert(
+            "Confirm Changes",
+            "Updating your profile will require a new verification process. You will be temporarily unapproved and offline until the review is complete. Do you want to proceed?",
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Proceed",
+                    style: "destructive",
+                    onPress: async () => {
+                        setIsSubmitting(true);
+                        try {
+                            const token = await SecureStore.getItemAsync("session_token");
+                            const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/driver/profile`, {
+                                method: "PATCH",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "Authorization": `Bearer ${token}`,
+                                },
+                                body: JSON.stringify({
+                                    firstName: form.firstName,
+                                    lastName: form.lastName,
+                                    profileImageUrl: form.profileImageUrl,
+                                }),
+                            });
 
-            const result = await response.json();
+                            const result = await response.json();
 
-            if (!response.ok) {
-                throw new Error(result.error || "Failed to update profile");
-            }
+                            if (!response.ok) {
+                                throw new Error(result.error || "Failed to update profile");
+                            }
 
-            Alert.alert("Success", "Profile updated successfully", [
-                { text: "OK", onPress: () => router.back() }
-            ]);
-        } catch (error: any) {
-            Alert.alert("Error", error.message);
-        } finally {
-            setIsSubmitting(false);
-        }
+                            Alert.alert("Success", "Profile updated. Your account is now under review.", [
+                                { text: "OK", onPress: () => router.back() }
+                            ]);
+                        } catch (error: any) {
+                            Alert.alert("Error", error.message);
+                        } finally {
+                            setIsSubmitting(false);
+                        }
+                    }
+                }
+            ]
+        );
     };
 
     if (loadingData) {
@@ -191,13 +204,14 @@ const EditProfile = () => {
                     </TouchableOpacity>
                 </View>
 
-                <View className="gap-5">
+                <View className="gap-5 px-1">
                     <InputField
                         label="First Name"
                         placeholder="Enter your first name"
                         value={form.firstName}
                         onChangeText={(text) => setForm({ ...form, firstName: text })}
                         editable={!isSubmitting}
+                        labelStyle="ml-1"
                     />
 
                     <InputField
@@ -206,6 +220,7 @@ const EditProfile = () => {
                         value={form.lastName}
                         onChangeText={(text) => setForm({ ...form, lastName: text })}
                         editable={!isSubmitting}
+                        labelStyle="ml-1"
                     />
 
                     <InputField
@@ -214,6 +229,7 @@ const EditProfile = () => {
                         value={form.email}
                         editable={false}
                         containerStyle="bg-neutral-50 opacity-60 border-neutral-100"
+                        labelStyle="ml-1"
                     />
 
                     <InputField
@@ -222,6 +238,7 @@ const EditProfile = () => {
                         value={form.phone}
                         editable={false}
                         containerStyle="bg-neutral-50 opacity-60 border-neutral-100"
+                        labelStyle="ml-1"
                     />
                 </View>
 
