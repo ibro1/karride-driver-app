@@ -15,6 +15,7 @@ const EditVehicle = () => {
     const { data: profileData, loading: loadingData } = useFetch<any>("/api/driver/profile");
 
     const [form, setForm] = useState({
+        vehicleType: "car",
         make: "",
         model: "",
         year: "",
@@ -28,6 +29,7 @@ const EditVehicle = () => {
     useEffect(() => {
         if (profileData?.vehicle) {
             setForm({
+                vehicleType: profileData.vehicle.vehicleType || "car",
                 make: profileData.vehicle.make || "",
                 model: profileData.vehicle.model || "",
                 year: profileData.vehicle.year?.toString() || "",
@@ -254,8 +256,12 @@ const EditVehicle = () => {
                                     "Authorization": `Bearer ${token}`,
                                 },
                                 body: JSON.stringify({
-                                    ...form,
+                                    vehicleType: form.vehicleType,
+                                    make: form.make,
+                                    model: form.model,
                                     year: parseInt(form.year),
+                                    color: form.color,
+                                    plateNumber: form.plateNumber,
                                     carSeats: parseInt(form.carSeats),
                                     carImageUrl: finalCarImageUrl,
                                 }),
@@ -341,6 +347,46 @@ const EditVehicle = () => {
                             </View>
                         )}
                     </TouchableOpacity>
+                </View>
+
+                {/* Vehicle Type Selector */}
+                <View className="mb-5">
+                    <Text className="text-lg font-JakartaSemiBold mb-3">Vehicle Type</Text>
+                    <View className="flex-row gap-3">
+                        <TouchableOpacity
+                            onPress={() => setForm({ ...form, vehicleType: 'car' })}
+                            disabled={isSubmitting}
+                            className={`flex-1 p-4 rounded-2xl border-2 ${form.vehicleType === 'car'
+                                ? 'border-primary-500 bg-primary-50'
+                                : 'border-neutral-300 bg-white'
+                                }`}
+                        >
+                            <Text className={`font-JakartaBold text-base ${form.vehicleType === 'car' ? 'text-primary-500' : 'text-neutral-800'
+                                }`}>
+                                🚗 Car
+                            </Text>
+                            <Text className="text-neutral-500 text-xs mt-1">
+                                4 seats • Standard
+                            </Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            onPress={() => setForm({ ...form, vehicleType: 'keke' })}
+                            disabled={isSubmitting}
+                            className={`flex-1 p-4 rounded-2xl border-2 ${form.vehicleType === 'keke'
+                                ? 'border-primary-500 bg-primary-50'
+                                : 'border-neutral-300 bg-white'
+                                }`}
+                        >
+                            <Text className={`font-JakartaBold text-base ${form.vehicleType === 'keke' ? 'text-primary-500' : 'text-neutral-800'
+                                }`}>
+                                🛺 Keke Napep
+                            </Text>
+                            <Text className="text-neutral-500 text-xs mt-1">
+                                3 seats • Budget
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
 
                 <InputField
