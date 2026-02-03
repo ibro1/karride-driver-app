@@ -13,7 +13,7 @@ export default {
         splash: {
             image: "./assets/icons/splash-icon.png",
             resizeMode: "contain",
-            backgroundColor: "#020402"
+            backgroundColor: "#FFFFFF"
         },
         updates: {
             url: "https://u.expo.dev/bb5677ce-a44c-4a45-8071-ca1673c4a918",
@@ -33,7 +33,7 @@ export default {
         android: {
             adaptiveIcon: {
                 foregroundImage: "./assets/icons/adaptive-icon.png",
-                backgroundColor: "#020402"
+                backgroundColor: "#FFFFFF"
             },
             package: "ng.karride.driver",
             config: {
