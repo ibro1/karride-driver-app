@@ -69,6 +69,7 @@ declare interface Ride {
   };
   driver_rating?: number;
   user_rating?: number;
+  trip_pin?: string;
 }
 
 declare interface ButtonProps extends TouchableOpacityProps {

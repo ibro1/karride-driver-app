@@ -1,101 +1,116 @@
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import { appleAuth, AppleButton } from "@invertase/react-native-apple-authentication";
+import { useEffect, useState } from "react";
+import { Alert, Image, View, Platform } from "react-native";
 import { router } from "expo-router";
-import { Alert, Image, Text, View } from "react-native";
-import * as WebBrowser from "expo-web-browser";
-import * as Google from "expo-auth-session/providers/google";
-import { useEffect } from "react";
-
 import CustomButton from "@/components/CustomButton";
 import { icons } from "@/constants";
-import { signInWithGoogle } from "@/lib/auth-api";
+import { signInWithGoogle, signInWithApple } from "@/lib/auth-api";
 import { useAuth } from "@/lib/auth-context";
 
-WebBrowser.maybeCompleteAuthSession();
-
 const OAuth = () => {
-  const { refreshSession } = useAuth();
+    const { refreshSession } = useAuth();
+    const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+    const [isAppleLoading, setIsAppleLoading] = useState(false);
 
-  console.log("OAuth Config:", {
-    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
-    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
-    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-    apiUrl: process.env.EXPO_PUBLIC_API_URL,
-  });
+    useEffect(() => {
+        // Configure Google Sign-In
+        GoogleSignin.configure({
+            webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID, // Ensure this is set if backend verification is needed for web client
+            iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+            scopes: ['profile', 'email'],
+        });
+    }, []);
 
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
-    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
-    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-  });
-
-  console.log("OAuth Request:", request);
-
-  useEffect(() => {
-    handleGoogleSignInResponse();
-  }, [response]);
-
-  const handleGoogleSignInResponse = async () => {
-    console.log("OAuth Response:", response);
-    if (response?.type === "success") {
-      const { authentication, params } = response;
-      console.log("Authentication:", authentication);
-      console.log("Params:", params);
-
-      if (authentication?.idToken) {
+    const handleGoogleSignIn = async () => {
+        setIsGoogleLoading(true);
         try {
-          console.log("Calling signInWithGoogle with idToken...");
-          await signInWithGoogle(authentication.idToken);
-          console.log("Google sign in successful, refreshing session...");
-          await refreshSession();
-          console.log("Session refreshed, navigating to home...");
-          router.replace("/(root)/(tabs)/home");
+            await GoogleSignin.hasPlayServices();
+            const userInfo = await GoogleSignin.signIn();
+
+            if (userInfo.idToken) {
+                const result = await signInWithGoogle(userInfo.idToken);
+                if (result.success) {
+                    await refreshSession();
+                    router.replace("/(root)/(tabs)/home");
+                } else {
+                    Alert.alert("Sign In Failed", result.error || "Could not sign in.");
+                    // Sign out if backend auth fails so user can try again
+                    await GoogleSignin.signOut();
+                }
+            } else {
+                Alert.alert("Error", "No ID Token returned from Google.");
+            }
         } catch (error: any) {
-          console.error("Google sign in error:", error);
-          Alert.alert("Error", error.message || "Google sign in failed");
+            // statusCodes.SIGN_IN_CANCELLED etc are available if needed
+            console.error("Google Sign-In error:", error);
+            if (error.code !== 'SIGN_IN_CANCELLED') {
+                Alert.alert("Error", error.message || "Failed to sign in with Google.");
+            }
+        } finally {
+            setIsGoogleLoading(false);
         }
-      }
-    } else if (response?.type === "error") {
-      console.error("OAuth Error:", response.error);
-      Alert.alert("OAuth Error", response.error?.message || "Authentication failed");
-    }
-  };
+    };
 
-  const handleGoogleSignIn = async () => {
-    console.log("Google Sign In button clicked");
-    try {
-      console.log("Calling promptAsync...");
-      const result = await promptAsync();
-      console.log("PromptAsync result:", result);
-    } catch (error: any) {
-      console.error("Google OAuth error:", error);
-      Alert.alert("Error", "Failed to initiate Google sign in");
-    }
-  };
+    const handleAppleSignIn = async () => {
+        setIsAppleLoading(true);
+        try {
+            const appleAuthRequestResponse = await appleAuth.performRequest({
+                requestedOperation: appleAuth.Operation.LOGIN,
+                requestedScopes: [appleAuth.Scope.FULL_NAME, appleAuth.Scope.EMAIL],
+            });
 
-  return (
-    <View>
-      <View className="flex flex-row justify-center items-center mt-4 gap-x-3">
-        <View className="flex-1 h-[1px] bg-general-100" />
-        <Text className="text-lg">Or</Text>
-        <View className="flex-1 h-[1px] bg-general-100" />
-      </View>
+            const { identityToken, fullName, email } = appleAuthRequestResponse;
 
-      <CustomButton
-        title="Log In with Google"
-        className="mt-5 w-full shadow-none"
-        IconLeft={() => (
-          <Image
-            source={icons.google}
-            resizeMode="contain"
-            className="w-5 h-5 mx-2"
-          />
-        )}
-        bgVariant="outline"
-        textVariant="primary"
-        onPress={handleGoogleSignIn}
-        disabled={!request}
-      />
-    </View>
-  );
+            if (identityToken) {
+                const result = await signInWithApple(identityToken, {
+                    name: fullName ? `${fullName.givenName} ${fullName.familyName}` : undefined,
+                    email: email || undefined,
+                });
+                if (result.success) {
+                    await refreshSession();
+                    router.replace("/(root)/(tabs)/home");
+                } else {
+                    Alert.alert("Sign In Failed", result.error || "Could not sign in.");
+                }
+            }
+        } catch (error: any) {
+            if (error.code === appleAuth.Error.CANCELED) {
+                console.log("Apple sign in cancelled");
+            } else {
+                Alert.alert("Error", error.message || "Apple Sign-In failed.");
+            }
+        } finally {
+            setIsAppleLoading(false);
+        }
+    };
+
+    return (
+        <View>
+            <CustomButton
+                title="Continue with Google"
+                className="mt-5 w-full shadow-none"
+                IconLeft={() => (
+                    <Image source={icons.google} resizeMode="contain" className="w-5 h-5 mx-2" />
+                )}
+                bgVariant="outline"
+                textVariant="primary"
+                onPress={handleGoogleSignIn}
+                isLoading={isGoogleLoading}
+            />
+
+            {Platform.OS === "ios" && appleAuth.isSupported && (
+                <View className="mt-4">
+                    <AppleButton
+                        buttonStyle={AppleButton.Style.BLACK}
+                        buttonType={AppleButton.Type.SIGN_IN}
+                        style={{ width: "100%", height: 50 }}
+                        onPress={handleAppleSignIn}
+                    />
+                </View>
+            )}
+        </View>
+    );
 };
 
 export default OAuth;

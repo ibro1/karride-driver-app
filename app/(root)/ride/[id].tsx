@@ -1,14 +1,15 @@
 import { useLocalSearchParams, router } from "expo-router";
 import { useEffect, useState, useRef } from "react";
-import { View, Text, ActivityIndicator, Image, Alert, TouchableOpacity, Linking } from "react-native";
+import { View, Text, ActivityIndicator, Image, Alert, TouchableOpacity, Linking, Modal, TextInput, KeyboardAvoidingView, Platform } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
 import * as Location from "expo-location";
+import { getDistance } from "geolib";
 
 import { icons, images } from "@/constants";
 import { useFetch } from "@/lib/fetch";
 import { Ride } from "@/types/type";
-import { updateRideStatus } from "@/lib/auth-api";
+import { updateRideStatus, verifyPin } from "@/lib/auth-api";
 import { getSocket } from "@/lib/socket";
 import SwipeButton from "@/components/SwipeButton";
 import RideLayout from "@/components/RideLayout";
@@ -20,7 +21,50 @@ const RideScreen = () => {
     const [status, setStatus] = useState<string>("accepted");
     const [driverLocation, setDriverLocation] = useState<Location.LocationObject | null>(null);
     const [isUpdating, setIsUpdating] = useState(false);
+    const [showPinModal, setShowPinModal] = useState(false);
+    const [pin, setPin] = useState(["", "", "", ""]);
+    const inputRefs = useRef<Array<TextInput | null>>([]);
     const mapRef = useRef<MapView>(null);
+    const [routeCoordinates, setRouteCoordinates] = useState<{ latitude: number; longitude: number }[]>([]);
+    const [lastAlertTime, setLastAlertTime] = useState<number>(0);
+
+    const checkDeviation = async (location: Location.LocationObject) => {
+        if (!routeCoordinates.length || status !== 'in_progress') return;
+
+        const currentPos = { latitude: location.coords.latitude, longitude: location.coords.longitude };
+
+        // Simple distance check to nearest point on route
+        let minDistance = Infinity;
+        // Check a subset of points or all? All is fine for < 1000 points.
+        for (const point of routeCoordinates) {
+            const dist = getDistance(currentPos, point);
+            if (dist < minDistance) minDistance = dist;
+        }
+
+        const THRESHOLD = 500; // 500 meters
+        if (minDistance > THRESHOLD) {
+            const now = Date.now();
+            // Alert max once every 5 mins
+            if (now - lastAlertTime > 5 * 60 * 1000) {
+                console.warn("Route Deviation Detected", minDistance);
+                setLastAlertTime(now);
+
+                try {
+                    await fetchAPI(`/api/rides/${id}/alert`, {
+                        method: "POST",
+                        body: JSON.stringify({
+                            type: "route_deviation",
+                            latitude: currentPos.latitude,
+                            longitude: currentPos.longitude,
+                            userId: ride?.user_id
+                        })
+                    });
+                } catch (e) {
+                    console.error("Failed to send deviation alert", e);
+                }
+            }
+        }
+    };
 
     useEffect(() => {
         if (ride) {
@@ -32,6 +76,7 @@ const RideScreen = () => {
         const getLocation = async () => {
             const loc = await Location.getCurrentPositionAsync({});
             setDriverLocation(loc);
+            checkDeviation(loc);
         };
         getLocation();
 
@@ -50,8 +95,10 @@ const RideScreen = () => {
             newStatus = "arrived";
             socketEvent = "ride_arrived";
         } else if (status === "arrived") {
-            newStatus = "in_progress";
-            socketEvent = "ride_started";
+            // New logic: Require PIN to start ride
+            setIsUpdating(false);
+            setShowPinModal(true);
+            return;
         } else if (status === "in_progress") {
             newStatus = "completed";
             socketEvent = "ride_completed";
@@ -77,6 +124,56 @@ const RideScreen = () => {
             Alert.alert("Error", error.message || "Failed to update status");
         } finally {
             setIsUpdating(false);
+        }
+    };
+
+    const handleVerifyPin = async () => {
+        const enteredPin = pin.join("");
+        if (enteredPin.length !== 4) {
+            Alert.alert("Error", "Please enter the compelte 4-digit PIN");
+            return;
+        }
+
+        setIsUpdating(true);
+        try {
+            await verifyPin(Number(id), enteredPin);
+            setStatus("in_progress");
+            setShowPinModal(false);
+
+            // Emit start event
+            const socket = getSocket();
+            socket.emit("ride_started", { rideId: id });
+
+            Alert.alert("Success", "Ride started successfully!");
+        } catch (error: any) {
+            Alert.alert("Verification Failed", error.message || "Invalid PIN. Please try again.");
+            setPin(["", "", "", ""]);
+            inputRefs.current[0]?.focus();
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
+    const handlePinChange = (text: string, index: number) => {
+        if (text.length > 1) {
+            text = text[0];
+        }
+
+        const newPin = [...pin];
+        newPin[index] = text;
+        setPin(newPin);
+
+        if (text !== "" && index < 3) {
+            inputRefs.current[index + 1]?.focus();
+        }
+    };
+
+    const handleBackspace = (text: string, index: number) => {
+        if (text === "" && index > 0) {
+            const newPin = [...pin];
+            newPin[index - 1] = "";
+            setPin(newPin);
+            inputRefs.current[index - 1]?.focus();
         }
     };
 
@@ -159,6 +256,12 @@ const RideScreen = () => {
                         apikey={process.env.EXPO_PUBLIC_DIRECTIONS_API_KEY!}
                         strokeColor="#0286FF"
                         strokeWidth={4}
+                        onReady={(result) => {
+                            setRouteCoordinates(result.coordinates);
+                            mapRef.current?.fitToCoordinates(result.coordinates, {
+                                edgePadding: { top: 50, right: 20, bottom: 20, left: 20 },
+                            });
+                        }}
                     />
                 </MapView>
             ) : (
@@ -254,6 +357,71 @@ const RideScreen = () => {
                     containerHeight={60}
                 />
             </View>
+
+            {/* PIN Entry Modal */}
+            <Modal
+                visible={showPinModal}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setShowPinModal(false)}
+            >
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === "ios" ? "padding" : "height"}
+                    className="flex-1 justify-end"
+                >
+                    <View className="bg-white rounded-t-3xl p-6 shadow-xl h-[50%]">
+                        <View className="items-center mb-6">
+                            <View className="w-16 h-1 bg-gray-300 rounded-full mb-6" />
+                            <Text className="text-2xl font-JakartaBold text-center mb-2">
+                                Enter Ride PIN
+                            </Text>
+                            <Text className="text-gray-500 text-center font-JakartaMedium">
+                                Ask the rider for the 4-digit PIN to start the trip.
+                            </Text>
+                        </View>
+
+                        <View className="flex-row justify-center space-x-4 mb-8">
+                            {pin.map((digit, index) => (
+                                <TextInput
+                                    key={index}
+                                    ref={(ref) => (inputRefs.current[index] = ref)}
+                                    value={digit}
+                                    onChangeText={(text) => handlePinChange(text, index)}
+                                    onKeyPress={({ nativeEvent }) => {
+                                        if (nativeEvent.key === 'Backspace') {
+                                            handleBackspace('', index);
+                                        }
+                                    }}
+                                    keyboardType="number-pad"
+                                    maxLength={1}
+                                    className="w-14 h-14 border-2 border-gray-200 rounded-xl text-center text-2xl font-bold bg-gray-50 text-black focus:border-[#0286FF] focus:bg-blue-50"
+                                    selectTextOnFocus
+                                />
+                            ))}
+                        </View>
+
+                        <View className="flex-row gap-4">
+                            <TouchableOpacity
+                                onPress={() => setShowPinModal(false)}
+                                className="flex-1 bg-gray-100 py-4 rounded-xl items-center"
+                            >
+                                <Text className="font-JakartaSemiBold text-gray-700 text-lg">Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={handleVerifyPin}
+                                disabled={isUpdating}
+                                className={`flex-1 py-4 rounded-xl items-center ${isUpdating ? 'bg-blue-300' : 'bg-[#0286FF]'}`}
+                            >
+                                {isUpdating ? (
+                                    <ActivityIndicator color="white" />
+                                ) : (
+                                    <Text className="font-JakartaBold text-white text-lg">Verify & Start</Text>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </KeyboardAvoidingView>
+            </Modal>
         </RideLayout>
     );
 };

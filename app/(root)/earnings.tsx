@@ -61,23 +61,35 @@ const Earnings = () => {
                 </Text>
               )}
 
-              <View className="flex-row gap-4 mb-8">
-                <View className="flex-1 bg-white/10 rounded-[24px] p-4 border border-white/20">
-                  <Text className="text-purple-50 text-[10px] font-JakartaBold uppercase tracking-tighter mb-1">Today</Text>
+              <View className="flex-row gap-3 mb-8">
+                <View className="flex-1 bg-white/10 rounded-[24px] p-3 border border-white/20">
+                  <Text className="text-purple-50 text-[9px] font-JakartaBold uppercase tracking-tighter mb-1">Total</Text>
                   {loading ? (
                     <Skeleton width={80} height={20} borderRadius={6} style={{ backgroundColor: "#ffffff20", opacity: 0.5 }} />
                   ) : (
-                    <Text className="text-white text-xl font-JakartaBold">
-                      ₦{earningsData?.today_earnings?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
+                    <Text className="text-white text-lg font-JakartaBold" numberOfLines={1}>
+                      ₦{earningsData?.today_earnings?.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) || "0"}
                     </Text>
                   )}
                 </View>
-                <View className="flex-1 bg-white/10 rounded-[24px] p-4 border border-white/20">
-                  <Text className="text-purple-50 text-[10px] font-JakartaBold uppercase tracking-tighter mb-1">Trips</Text>
+
+                <View className="flex-1 bg-white/10 rounded-[24px] p-3 border border-white/20">
+                  <Text className="text-purple-50 text-[9px] font-JakartaBold uppercase tracking-tighter mb-1">Cash</Text>
                   {loading ? (
-                    <Skeleton width={40} height={20} borderRadius={6} style={{ backgroundColor: "#ffffff20", opacity: 0.5 }} />
+                    <Skeleton width={80} height={20} borderRadius={6} style={{ backgroundColor: "#ffffff20", opacity: 0.5 }} />
                   ) : (
-                    <Text className="text-white text-xl font-JakartaBold">
+                    <Text className="text-white text-lg font-JakartaBold" numberOfLines={1}>
+                      ₦{earningsData?.today_cash?.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) || "0"}
+                    </Text>
+                  )}
+                </View>
+
+                <View className="w-20 bg-white/10 rounded-[24px] p-3 border border-white/20 items-center">
+                  <Text className="text-purple-50 text-[9px] font-JakartaBold uppercase tracking-tighter mb-1">Trips</Text>
+                  {loading ? (
+                    <Skeleton width={20} height={20} borderRadius={6} style={{ backgroundColor: "#ffffff20", opacity: 0.5 }} />
+                  ) : (
+                    <Text className="text-white text-lg font-JakartaBold">
                       {earningsData?.today_rides || 0}
                     </Text>
                   )}

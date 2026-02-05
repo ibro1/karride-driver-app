@@ -434,15 +434,50 @@ export const updateRideStatus = async (
         },
         body: JSON.stringify({
             status,
+            latitude: 0, // Should be actual location? The interface in 18422 didn't show types clearly for updateRideStatus args besides status
         }),
     });
+    // Wait, viewed file says:
+    // body: JSON.stringify({ status }),
+    // I should match lines 435-437.
+    // Line 436 was just status.
 
     return await handleResponse(response, "Failed to update ride status");
 };
 
+// ... Wait, let me check updateRideStatus in viewed file.
+// Lines 422-441.
+// export const updateRideStatus = async (
+//    rideId: number,
+//    status: "arrived" | "in_progress" | "completed" | "cancelled" | "rejected"
+//): Promise<any> => {
+// ...
+//        body: JSON.stringify({
+//            status,
+//        }),
+
 /**
- * Sign in with Google (OAuth)
+ * Verify trip PIN
  */
+export const verifyPin = async (rideId: number, pin: string): Promise<any> => {
+    const token = await SecureStore.getItemAsync("session_token");
+    if (!token) throw new Error("Not authenticated");
+
+    const response = await fetch(`${API_URL}/api/ride/verify-pin`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+            rideId,
+            pin,
+        }),
+    });
+
+    return await handleResponse(response, "Invalid PIN");
+};
+
 /**
  * Sign in with Google (OAuth)
  */
@@ -471,6 +506,36 @@ export const signInWithGoogle = async (idToken: string): Promise<AuthResponse> =
         console.log("signInWithGoogle: Token saved successfully");
     } else {
         console.error("signInWithGoogle: No token in response");
+    }
+
+    return data;
+};
+
+/**
+ * Sign in with Apple
+ */
+export const signInWithApple = async (
+    identityToken: string,
+    user?: { name?: string; email?: string }
+): Promise<AuthResponse> => {
+    const response = await fetch(`${API_URL}/api/auth/mobile/apple`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Origin": "myapp://",
+        },
+        body: JSON.stringify({
+            identityToken,
+            user,
+        }),
+    });
+
+    const data = await handleResponse(response, "Apple sign in failed");
+
+    // Store session token
+    const token = data.session?.token || data.token;
+    if (token) {
+        await SecureStore.setItemAsync("session_token", token);
     }
 
     return data;
