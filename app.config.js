@@ -11,7 +11,7 @@ export default {
         scheme: "ng.karride.driver",
         userInterfaceStyle: "automatic",
         splash: {
-            image: "./assets/icons/splash-icon.png",
+            image: "./assets/icons/icon.png",
             resizeMode: "contain",
             backgroundColor: "#FFFFFF"
         },
@@ -55,7 +55,7 @@ export default {
                     iosUrlScheme: "com.googleusercontent.apps.1017865246294-u4sfd9c878e9l52glgh4e73t2c5a278d"
                 }
             ],
-            "@invertase/react-native-apple-authentication",
+            "expo-apple-authentication",
             [
                 "expo-router",
                 {

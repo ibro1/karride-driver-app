@@ -1,5 +1,5 @@
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
-import { appleAuth, AppleButton } from "@invertase/react-native-apple-authentication";
+import * as AppleAuthentication from "expo-apple-authentication";
 import { useEffect, useState } from "react";
 import { Alert, Image, View, Platform } from "react-native";
 import { router } from "expo-router";
@@ -55,12 +55,14 @@ const OAuth = () => {
     const handleAppleSignIn = async () => {
         setIsAppleLoading(true);
         try {
-            const appleAuthRequestResponse = await appleAuth.performRequest({
-                requestedOperation: appleAuth.Operation.LOGIN,
-                requestedScopes: [appleAuth.Scope.FULL_NAME, appleAuth.Scope.EMAIL],
+            const credential = await AppleAuthentication.signInAsync({
+                requestedScopes: [
+                    AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+                    AppleAuthentication.AppleAuthenticationScope.EMAIL,
+                ],
             });
 
-            const { identityToken, fullName, email } = appleAuthRequestResponse;
+            const { identityToken, fullName, email } = credential;
 
             if (identityToken) {
                 const result = await signInWithApple(identityToken, {
@@ -75,9 +77,11 @@ const OAuth = () => {
                 }
             }
         } catch (error: any) {
-            if (error.code === appleAuth.Error.CANCELED) {
+            if (error.code === 'ERR_REQUEST_CANCELED') {
+                // handle that the user canceled the sign-in flow
                 console.log("Apple sign in cancelled");
             } else {
+                // handle other errors
                 Alert.alert("Error", error.message || "Apple Sign-In failed.");
             }
         } finally {
@@ -99,11 +103,12 @@ const OAuth = () => {
                 isLoading={isGoogleLoading}
             />
 
-            {Platform.OS === "ios" && appleAuth.isSupported && (
+            {Platform.OS === "ios" && (
                 <View className="mt-4">
-                    <AppleButton
-                        buttonStyle={AppleButton.Style.BLACK}
-                        buttonType={AppleButton.Type.SIGN_IN}
+                    <AppleAuthentication.AppleAuthenticationButton
+                        buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+                        buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                        cornerRadius={5}
                         style={{ width: "100%", height: 50 }}
                         onPress={handleAppleSignIn}
                     />
