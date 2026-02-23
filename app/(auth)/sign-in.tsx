@@ -61,16 +61,19 @@ const SignIn = () => {
 
   const onSignInPress = useCallback(async () => {
     if (!isLoaded) return;
-    if (!phone) {
-      Alert.alert("Error", "Please enter your phone number");
+    if (isSubmitting) return;
+
+    let cleanPhone = phone.trim().replace(/\D/g, '');
+    if (cleanPhone.startsWith("0")) cleanPhone = cleanPhone.substring(1);
+
+    if (!cleanPhone || cleanPhone.length < 9 || cleanPhone.length > 11) {
+      Alert.alert("Error", "Please enter a valid phone number (9-11 digits)");
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      let cleanPhone = phone.trim();
-      if (cleanPhone.startsWith("0")) cleanPhone = cleanPhone.substring(1);
       const formattedPhone = `${selectedCountry.code}${cleanPhone}`;
 
       console.log("\n====================================================");

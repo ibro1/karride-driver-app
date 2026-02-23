@@ -30,8 +30,10 @@ const Verification = () => {
 
     const onVerifyPress = useCallback(async () => {
         if (!isLoaded || !phone) return;
+        if (isSubmitting) return;
+
         if (code.length < CODE_LENGTH) {
-            Alert.alert("Error", "Please enter a valid 6-digit code");
+            Alert.alert("Error", "Please enter a valid OTP");
             return;
         }
 
@@ -54,12 +56,11 @@ const Verification = () => {
                 inputRef.current?.focus();
             }
         } catch (err: any) {
-            console.error("Verification error:", err);
-            Alert.alert("Error", err.message || "Failed to verify. Please try again.");
+            Alert.alert("Error", err.message || "Invalid code");
         } finally {
             setIsSubmitting(false);
         }
-    }, [isLoaded, code, phone, verifyOtp]);
+    }, [isLoaded, phone, code, verifyOtp, isSubmitting]);
 
     // Auto submit when 6 digits are typed
     useEffect(() => {
@@ -102,10 +103,10 @@ const Verification = () => {
                                 <View
                                     key={index}
                                     className={`w-[14%] aspect-square rounded-2xl justify-center items-center border-[1.5px] ${isFocused
-                                            ? "border-primary-500 bg-primary-100/30"
-                                            : isFilled
-                                                ? "border-neutral-200 bg-white"
-                                                : "border-neutral-100 bg-neutral-50"
+                                        ? "border-primary-500 bg-primary-100/30"
+                                        : isFilled
+                                            ? "border-neutral-200 bg-white"
+                                            : "border-neutral-100 bg-neutral-50"
                                         }`}
                                 >
                                     <Text className="text-2xl font-JakartaExtraBold text-black">{digit}</Text>
