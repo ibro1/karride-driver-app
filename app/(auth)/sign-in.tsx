@@ -1,41 +1,67 @@
 import { router } from "expo-router";
-import { useCallback, useState, useRef } from "react";
-import { Alert, Image, ScrollView, Text, View, TouchableOpacity, FlatList } from "react-native";
-import { ReactNativeModal } from "react-native-modal";
+import React, { useCallback, useState, useRef, useMemo } from "react";
 import FirebaseRecaptchaVerifierModal from "@/components/FirebaseRecaptchaVerifierModal";
 import { firebaseConfig } from "@/lib/firebase";
+import {
+  Alert,
+  Text,
+  View,
+  TouchableOpacity,
+  TextInput,
+  Image,
+  Keyboard,
+  Platform
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { BottomSheetModal, BottomSheetBackdrop, BottomSheetFlatList } from "@gorhom/bottom-sheet";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 import CustomButton from "@/components/CustomButton";
-import InputField from "@/components/InputField";
-import { icons, images } from "@/constants";
+import { icons } from "@/constants";
 import { useAuth } from "@/lib/auth-context";
 
 const countries = [
-  { code: "NG", name: "Nigeria", dial_code: "+234", flag: "🇳🇬" },
-  { code: "US", name: "United States", dial_code: "+1", flag: "🇺🇸" },
-  { code: "GB", name: "United Kingdom", dial_code: "+44", flag: "🇬🇧" },
-  { code: "GH", name: "Ghana", dial_code: "+233", flag: "🇬🇭" },
-  { code: "ZA", name: "South Africa", dial_code: "+27", flag: "🇿🇦" },
-  { code: "KE", name: "Kenya", dial_code: "+254", flag: "🇰🇪" },
-  { code: "CA", name: "Canada", dial_code: "+1", flag: "🇨🇦" },
+  { code: "+234", flag: "🇳🇬", name: "Nigeria" },
+  { code: "+1", flag: "🇺🇸", name: "United States" },
+  { code: "+44", flag: "🇬🇧", name: "United Kingdom" },
+  { code: "+254", flag: "🇰🇪", name: "Kenya" },
+  { code: "+233", flag: "🇬🇭", name: "Ghana" },
+  { code: "+27", flag: "🇿🇦", name: "South Africa" },
+  { code: "+250", flag: "🇷🇼", name: "Rwanda" },
+  { code: "+256", flag: "🇺🇬", name: "Uganda" },
+  { code: "+255", flag: "🇹🇿", name: "Tanzania" },
+  { code: "+225", flag: "🇨🇮", name: "Côte d'Ivoire" },
 ];
 
 const SignIn = () => {
   const { sendOtp, isLoaded } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const [form, setForm] = useState({
-    phone: "",
-    countryCode: "+234",
-    countryFlag: "🇳🇬",
-  });
-
+  const [phone, setPhone] = useState("");
   const recaptchaVerifier = useRef(null);
-  const [isCountryPickerVisible, setCountryPickerVisible] = useState(false);
+
+  const [selectedCountry, setSelectedCountry] = useState(countries[0]);
+  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+  const snapPoints = useMemo(() => ["60%", "90%"], []);
+
+  const handleOpenPress = useCallback(() => {
+    Keyboard.dismiss();
+    bottomSheetModalRef.current?.present();
+  }, []);
+
+  const handleClosePress = useCallback(() => {
+    bottomSheetModalRef.current?.dismiss();
+  }, []);
+
+  const renderBackdrop = useCallback(
+    (props: any) => (
+      <BottomSheetBackdrop {...props} opacity={0.5} disappearsOnIndex={-1} appearsOnIndex={0} />
+    ),
+    []
+  );
 
   const onSignInPress = useCallback(async () => {
     if (!isLoaded) return;
-    if (!form.phone) {
+    if (!phone) {
       Alert.alert("Error", "Please enter your phone number");
       return;
     }
@@ -43,105 +69,118 @@ const SignIn = () => {
     setIsSubmitting(true);
 
     try {
-      // Remove leading zero if present
-      let phoneNumber = form.phone;
-      if (phoneNumber.startsWith("0")) {
-        phoneNumber = phoneNumber.substring(1);
-      }
+      let cleanPhone = phone.trim();
+      if (cleanPhone.startsWith("0")) cleanPhone = cleanPhone.substring(1);
+      const formattedPhone = `${selectedCountry.code}${cleanPhone}`;
 
-      const fullPhone = `${form.countryCode}${phoneNumber}`;
-      // Pass verifier to sendOtp
-      await sendOtp(fullPhone, recaptchaVerifier.current);
+      console.log("\n====================================================");
+      console.log(">>> 📱 [DRIVER] SENDING OTP TO:", formattedPhone);
+      console.log("====================================================\n");
 
-      router.push({
-        pathname: "/(auth)/verification",
-        params: { phone: fullPhone }
-      });
+      await sendOtp(formattedPhone, recaptchaVerifier.current);
+
+      router.push({ pathname: "/(auth)/verification", params: { phone: formattedPhone } });
     } catch (err: any) {
       console.error("Sign in error:", err);
       Alert.alert("Error", err.message || "Failed to send OTP. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
-  }, [isLoaded, form, sendOtp]);
-
-  const renderCountryItem = ({ item }: { item: typeof countries[0] }) => (
-    <TouchableOpacity
-      className="flex-row items-center p-3 border-b border-gray-100"
-      onPress={() => {
-        setForm({ ...form, countryCode: item.dial_code, countryFlag: item.flag });
-        setCountryPickerVisible(false);
-      }}
-    >
-      <Text className="text-2xl mr-3">{item.flag}</Text>
-      <Text className="text-base font-JakartaMedium flex-1 text-black">{item.name}</Text>
-      <Text className="text-base text-gray-500">{item.dial_code}</Text>
-    </TouchableOpacity>
-  );
+  }, [isLoaded, phone, sendOtp, selectedCountry]);
 
   return (
-    <ScrollView className="flex-1 bg-white">
-      <View className="flex-1 bg-white">
-        <View className="relative w-full h-[250px]">
-          <Image source={images.signUpCar} className="z-0 w-full h-[250px]" />
-          <Text className="text-2xl text-black font-JakartaSemiBold absolute bottom-5 left-5">
-            Welcome Driver 👋
+    <SafeAreaView className="flex-1 bg-white">
+      <KeyboardAwareScrollView
+        contentContainerStyle={{ flexGrow: 1, justifyContent: "space-between", padding: 24 }}
+        keyboardShouldPersistTaps="handled"
+        enableOnAndroid={true}
+        extraScrollHeight={Platform.OS === "ios" ? 20 : 0}
+      >
+        <View className="flex-1 mt-6">
+          <Text className="text-4xl text-black font-JakartaExtraBold mb-3 tracking-tight">
+            Welcome{"\n"}Partner 👋
           </Text>
+          <Text className="text-lg text-gray-500 font-Jakarta mb-10 leading-7">
+            Enter your phone number to continue mapping your success.
+          </Text>
+
+          <View className="flex-row items-center w-full h-16 bg-neutral-100 rounded-2xl px-5 border border-neutral-100 focus:border-primary-500">
+            <TouchableOpacity onPress={handleOpenPress} className="flex-row items-center mr-3 h-full">
+              <Text className="text-3xl mr-2">{selectedCountry.flag}</Text>
+              <Text className="text-lg font-JakartaSemiBold text-black">{selectedCountry.code}</Text>
+              <Image source={icons.arrowDown} className="w-4 h-4 ml-2 opacity-40" resizeMode="contain" />
+            </TouchableOpacity>
+
+            <View className="w-[1px] h-8 bg-neutral-300 mx-2" />
+
+            <TextInput
+              className="flex-1 text-xl font-JakartaSemiBold text-black h-full ml-2 pb-1"
+              placeholder="0801 234 5678"
+              placeholderTextColor="#A0A0A0"
+              keyboardType="phone-pad"
+              value={phone}
+              onChangeText={setPhone}
+              returnKeyType="done"
+              onSubmitEditing={onSignInPress}
+              autoFocus
+            />
+          </View>
         </View>
 
-        <View className="p-5">
-          <Text className="text-lg font-JakartaSemiBold mb-3">Phone Number</Text>
-          <InputField
-            label=""
-            placeholder="Enter phone number"
-            keyboardType="phone-pad"
-            value={form.phone}
-            onChangeText={(value) => setForm({ ...form, phone: value })}
-            prefix={
-              <TouchableOpacity
-                onPress={() => setCountryPickerVisible(true)}
-                className="flex-row items-center mr-2 px-2 py-1 bg-neutral-100 rounded-md"
-              >
-                <Text className="text-lg mr-1">{form.countryFlag}</Text>
-                <Text className="text-base font-JakartaMedium text-neutral-700">{form.countryCode}</Text>
-                <Image source={icons.arrowDown} className="w-3 h-3 ml-1" resizeMode="contain" />
-              </TouchableOpacity>
-            }
-          />
-
+        <View className="pb-4 pt-6">
           <CustomButton
             title="Continue"
             onPress={onSignInPress}
-            className="mt-6"
             isLoading={isSubmitting}
+            className="h-14 shadow-md shadow-neutral-400/30"
           />
-
-          <ReactNativeModal
-            isVisible={isCountryPickerVisible}
-            onBackdropPress={() => setCountryPickerVisible(false)}
-            onBackButtonPress={() => setCountryPickerVisible(false)}
-            style={{ margin: 0, justifyContent: "flex-end" }}
-          >
-            <View className="bg-white rounded-t-3xl h-[60%] p-5">
-              <Text className="text-xl font-JakartaBold mb-4 text-center">Select Country</Text>
-              <FlatList
-                data={countries}
-                keyExtractor={(item) => item.code}
-                renderItem={renderCountryItem}
-                showsVerticalScrollIndicator={false}
-              />
-            </View>
-          </ReactNativeModal>
-
         </View>
+      </KeyboardAwareScrollView>
 
-        <FirebaseRecaptchaVerifierModal
-          ref={recaptchaVerifier}
-          firebaseConfig={firebaseConfig}
-        />
+      <BottomSheetModal
+        ref={bottomSheetModalRef}
+        index={0}
+        snapPoints={snapPoints}
+        backdropComponent={renderBackdrop}
+        handleIndicatorStyle={{ backgroundColor: "#E5E5E5", width: 40, height: 5 }}
+        backgroundStyle={{ borderRadius: 32 }}
+      >
+        <View className="flex-1 px-6 pt-2 pb-8">
+          <View className="flex-row justify-between items-center mb-6">
+            <Text className="text-2xl font-JakartaBold text-black tracking-tight">Select Country</Text>
+            <TouchableOpacity onPress={handleClosePress} className="p-2 bg-neutral-100 rounded-full">
+              <Text className="text-sm font-JakartaSemiBold text-neutral-600">Close</Text>
+            </TouchableOpacity>
+          </View>
 
-      </View>
-    </ScrollView>
+          <BottomSheetFlatList
+            data={countries}
+            keyExtractor={(item) => item.name}
+            showsVerticalScrollIndicator={false}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                className="flex-row items-center p-4 mb-2 bg-neutral-50 rounded-2xl active:bg-neutral-100"
+                onPress={() => {
+                  setSelectedCountry(item);
+                  handleClosePress();
+                }}
+              >
+                <Text className="text-3xl mr-4">{item.flag}</Text>
+                <View className="flex-1">
+                  <Text className="text-lg font-JakartaSemiBold text-black">{item.name}</Text>
+                  <Text className="text-sm text-gray-500 font-JakartaMedium">{item.code}</Text>
+                </View>
+              </TouchableOpacity>
+            )}
+          />
+        </View>
+      </BottomSheetModal>
+
+      <FirebaseRecaptchaVerifierModal
+        ref={recaptchaVerifier}
+        firebaseConfig={firebaseConfig}
+      />
+    </SafeAreaView>
   );
 };
 

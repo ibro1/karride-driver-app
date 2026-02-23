@@ -1,36 +1,43 @@
 import { useLocalSearchParams, router } from "expo-router";
-import { useCallback, useState, useEffect } from "react";
-import { Alert, Image, ScrollView, Text, View } from "react-native";
+import React, { useCallback, useState, useEffect, useRef } from "react";
+import { Alert, Text, View, TextInput, TouchableOpacity, Platform, Image } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { ReactNativeModal } from "react-native-modal";
 
 import CustomButton from "@/components/CustomButton";
-import InputField from "@/components/InputField";
 import { icons, images } from "@/constants";
 import { useAuth } from "@/lib/auth-context";
+
+const CODE_LENGTH = 6;
 
 const Verification = () => {
     const { phone } = useLocalSearchParams();
     const { verifyOtp, isLoaded } = useAuth();
 
-    const [code, setCode] = useState({
-        value: "",
-        error: "",
-    });
-
+    const [code, setCode] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [isNewUser, setIsNewUser] = useState(false);
+    const inputRef = useRef<TextInput>(null);
+
+    // Focus input on mount
+    useEffect(() => {
+        setTimeout(() => {
+            inputRef.current?.focus();
+        }, 100);
+    }, []);
 
     const onVerifyPress = useCallback(async () => {
-        if (!isLoaded) return;
-        if (!code.value || code.value.length < 6) {
-            setCode({ ...code, error: "Please enter a valid 6-digit code" });
+        if (!isLoaded || !phone) return;
+        if (code.length < CODE_LENGTH) {
+            Alert.alert("Error", "Please enter a valid 6-digit code");
             return;
         }
 
         setIsSubmitting(true);
         try {
-            const response = await verifyOtp(phone as string, code.value);
+            const response = await verifyOtp(phone as string, code);
 
             if (response.success) {
                 const isNew = response.isNewUser;
@@ -39,90 +46,135 @@ const Verification = () => {
                 if (isNew) {
                     setShowSuccessModal(true);
                 } else {
-                    // Existing user - login immediately without modal
                     router.replace("/(root)/(tabs)/home");
                 }
             } else {
-                setCode({
-                    ...code,
-                    error: response.error || "Verification failed"
-                });
+                Alert.alert("Error", response.error || "Verification failed");
+                setCode("");
+                inputRef.current?.focus();
             }
         } catch (err: any) {
             console.error("Verification error:", err);
-            setCode({
-                ...code,
-                error: err.message || "Failed to verify. Please try again."
-            });
+            Alert.alert("Error", err.message || "Failed to verify. Please try again.");
         } finally {
             setIsSubmitting(false);
         }
-    }, [isLoaded, code.value, phone, verifyOtp]);
+    }, [isLoaded, code, phone, verifyOtp]);
+
+    // Auto submit when 6 digits are typed
+    useEffect(() => {
+        if (code.length === CODE_LENGTH) {
+            onVerifyPress();
+        }
+    }, [code, onVerifyPress]);
+
+    const handleContainerPress = () => {
+        inputRef.current?.focus();
+    };
 
     return (
-        <ScrollView className="flex-1 bg-white">
-            <View className="flex-1 bg-white">
-                <View className="relative w-full h-[250px]">
-                    <Image source={images.signUpCar} className="z-0 w-full h-[250px]" />
-                    <Text className="text-2xl text-black font-JakartaSemiBold absolute bottom-5 left-5">
-                        Verification
+        <SafeAreaView className="flex-1 bg-white">
+            <KeyboardAwareScrollView
+                contentContainerStyle={{ flexGrow: 1, justifyContent: "space-between", padding: 24 }}
+                keyboardShouldPersistTaps="handled"
+                enableOnAndroid={true}
+                extraScrollHeight={Platform.OS === "ios" ? 20 : 0}
+            >
+                <View className="flex-1 mt-6">
+                    <Text className="text-4xl text-black font-JakartaExtraBold mb-3 tracking-tight">
+                        Verify your{"\n"}number
                     </Text>
+                    <Text className="text-lg text-gray-500 font-Jakarta mb-10 leading-7">
+                        Enter the {CODE_LENGTH}-digit code sent to {phone}
+                    </Text>
+
+                    <TouchableOpacity
+                        activeOpacity={1}
+                        onPress={handleContainerPress}
+                        className="flex-row w-full justify-between items-center h-16 relative"
+                    >
+                        {[...Array(CODE_LENGTH)].map((_, index) => {
+                            const isFocused = code.length === index;
+                            const isFilled = code.length > index;
+                            const digit = code[index] || "";
+
+                            return (
+                                <View
+                                    key={index}
+                                    className={`w-[14%] aspect-square rounded-2xl justify-center items-center border-[1.5px] ${isFocused
+                                            ? "border-primary-500 bg-primary-100/30"
+                                            : isFilled
+                                                ? "border-neutral-200 bg-white"
+                                                : "border-neutral-100 bg-neutral-50"
+                                        }`}
+                                >
+                                    <Text className="text-2xl font-JakartaExtraBold text-black">{digit}</Text>
+                                    {isFocused && (
+                                        <View className="absolute bottom-2 w-4 h-0.5 bg-primary-500 rounded-full animate-pulse" />
+                                    )}
+                                </View>
+                            );
+                        })}
+
+                        <TextInput
+                            ref={inputRef}
+                            className="absolute w-full h-full opacity-0"
+                            value={code}
+                            onChangeText={(text) => setCode(text.replace(/[^0-9]/g, "").slice(0, CODE_LENGTH))}
+                            keyboardType="number-pad"
+                            textContentType="oneTimeCode"
+                            autoComplete="sms-otp"
+                            caretHidden
+                        />
+                    </TouchableOpacity>
                 </View>
 
-                <View className="p-5">
-                    <Text className="font-Jakarta mb-5 text-base text-gray-500">
-                        We've sent a verification code to {phone}.
-                    </Text>
-
-                    <InputField
-                        label="Code"
-                        icon={icons.lock}
-                        placeholder="123456"
-                        keyboardType="numeric"
-                        value={code.value}
-                        onChangeText={(value) => setCode({ value, error: "" })}
-                    />
-
-                    {code.error ? (
-                        <Text className="text-red-500 text-sm mt-1">{code.error}</Text>
-                    ) : null}
-
+                <View className="pb-4 pt-6">
                     <CustomButton
-                        title="Verify"
+                        title="Verify Code"
                         onPress={onVerifyPress}
-                        className="mt-5 bg-success-500"
+                        className="h-14 shadow-md shadow-neutral-400/30"
                         isLoading={isSubmitting}
                     />
                 </View>
+            </KeyboardAwareScrollView>
 
-                <ReactNativeModal isVisible={showSuccessModal}>
-                    <View className="bg-white px-7 py-9 rounded-2xl min-h-[300px]">
+            <ReactNativeModal
+                isVisible={showSuccessModal}
+                animationIn="zoomIn"
+                animationOut="zoomOut"
+                backdropOpacity={0.4}
+                useNativeDriver
+            >
+                <View className="bg-white px-8 py-10 rounded-3xl mx-4 items-center">
+                    <View className="bg-green-100 w-24 h-24 rounded-full justify-center items-center mb-6">
                         <Image
                             source={images.check}
-                            className="w-[110px] h-[110px] mx-auto my-5"
-                        />
-                        <Text className="text-3xl font-JakartaBold text-center">
-                            Verified!
-                        </Text>
-                        <Text className="text-base text-gray-400 font-Jakarta text-center mt-2">
-                            You have successfully verified your account.
-                        </Text>
-                        <CustomButton
-                            title="Continue"
-                            onPress={() => {
-                                setShowSuccessModal(false);
-                                if (isNewUser) {
-                                    router.replace("/(auth)/onboarding");
-                                } else {
-                                    router.replace("/(root)/(tabs)/home");
-                                }
-                            }}
-                            className="mt-5"
+                            className="w-14 h-14"
+                            resizeMode="contain"
                         />
                     </View>
-                </ReactNativeModal>
-            </View>
-        </ScrollView>
+                    <Text className="text-3xl font-JakartaExtraBold text-black text-center tracking-tight mb-3">
+                        Verified!
+                    </Text>
+                    <Text className="text-base text-gray-500 font-Jakarta text-center leading-6 mb-8 px-2">
+                        Your account has been successfully verified. Welcome to the team!
+                    </Text>
+                    <CustomButton
+                        title="Dive In"
+                        onPress={() => {
+                            setShowSuccessModal(false);
+                            if (isNewUser) {
+                                router.replace("/(auth)/onboarding");
+                            } else {
+                                router.replace("/(root)/(tabs)/home");
+                            }
+                        }}
+                        className="w-full h-14 shadow-lg shadow-neutral-400/30"
+                    />
+                </View>
+            </ReactNativeModal>
+        </SafeAreaView>
     );
 };
 
