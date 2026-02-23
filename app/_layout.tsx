@@ -9,7 +9,7 @@ import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 
 import { AuthProvider } from "@/lib/auth-context";
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
+// Prevent the splash screen from auto-hiding before asset loading is complete....
 SplashScreen.preventAutoHideAsync();
 
 LogBox.ignoreLogs(["Clerk:"]);

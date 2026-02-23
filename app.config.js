@@ -28,6 +28,9 @@ export default {
             icons: {
                 dark: "./assets/icons/ios-dark.png",
                 light: "./assets/icons/ios-dark.png"
+            },
+            config: {
+                googleMapsApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "REPLACE_WITH_YOUR_GOOGLE_MAPS_API_KEY"
             }
         },
         android: {
