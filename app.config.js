@@ -53,6 +53,13 @@ export default {
         },
         plugins: [
             [
+                "expo-notifications",
+                {
+                    "icon": "./assets/icons/icon.png",
+                    "color": "#ffffff"
+                }
+            ],
+            [
                 "@react-native-google-signin/google-signin",
                 {
                     iosUrlScheme: "com.googleusercontent.apps.1017865246294-u4sfd9c878e9l52glgh4e73t2c5a278d"

@@ -1,6 +1,28 @@
 import { Stack } from "expo-router";
+import { useEffect } from "react";
+import { usePushNotifications } from "@/lib/notifications";
+import { fetchAPI } from "@/lib/fetch";
 
 const Layout = () => {
+  const { expoPushToken } = usePushNotifications();
+
+  useEffect(() => {
+    if (expoPushToken) {
+      const syncToken = async () => {
+        try {
+          await fetchAPI("/api/user/push-token", {
+            method: "POST",
+            body: JSON.stringify({ pushToken: expoPushToken }),
+          });
+          console.log("Push Token Synced");
+        } catch (error) {
+          console.error("Failed to sync push token", error);
+        }
+      };
+      syncToken();
+    }
+  }, [expoPushToken]);
+
   return (
     <Stack>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
