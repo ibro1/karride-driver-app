@@ -5,6 +5,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { icons } from "@/constants";
 import { useFetch, fetchAPI } from "@/lib/fetch";
 import { useUser } from "@/lib/auth-context";
+import { API_URL } from "@/lib/config";
 import { io, Socket } from "socket.io-client";
 
 interface Message {
@@ -97,7 +98,7 @@ const SupportChat = () => {
         if (!id) return;
 
         // console.log("Connecting to Socket for Ticket:", id);
-        socketRef.current = io(process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000");
+        socketRef.current = io(API_URL);
 
         socketRef.current.emit("join_support_chat", { ticketId: id });
 

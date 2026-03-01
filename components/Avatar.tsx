@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Image, Text, View } from "react-native";
+import { API_URL } from "@/lib/config";
 
 interface AvatarProps {
     source?: string | null;
@@ -37,7 +38,6 @@ const Avatar = ({ source, name, size = 12, className }: AvatarProps) => {
     }
 
     let fullSource = source;
-    const apiUrl = process.env.EXPO_PUBLIC_API_URL || "";
 
     // Fix URLs with /app/uploads (legacy issue)
     if (fullSource.includes('/app/uploads/')) {
@@ -45,15 +45,15 @@ const Avatar = ({ source, name, size = 12, className }: AvatarProps) => {
     }
 
     // In development, replace production domain with local API URL
-    if (apiUrl && (apiUrl.includes('localhost') || apiUrl.includes('127.0.0.1') || apiUrl.match(/\d+\.\d+\.\d+\.\d+/))) {
-        fullSource = fullSource.replace('https://karride.ng', apiUrl);
-        fullSource = fullSource.replace('http://karride.ng', apiUrl);
+    if (API_URL && (API_URL.includes('localhost') || API_URL.includes('127.0.0.1') || API_URL.match(/\d+\.\d+\.\d+\.\d+/))) {
+        fullSource = fullSource.replace('https://karride.ng', API_URL);
+        fullSource = fullSource.replace('http://karride.ng', API_URL);
     }
 
     if (source.includes("localhost") || source.includes("127.0.0.1")) {
-        fullSource = source.replace(/https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/, apiUrl);
+        fullSource = source.replace(/https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/, API_URL);
     } else if (!source.startsWith("http")) {
-        fullSource = `${apiUrl}${source.startsWith("/") ? "" : "/"}${source}`;
+        fullSource = `${API_URL}${source.startsWith("/") ? "" : "/"}${source}`;
     }
 
     return (

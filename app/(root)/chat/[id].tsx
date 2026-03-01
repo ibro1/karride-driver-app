@@ -8,6 +8,7 @@ import * as SecureStore from "expo-secure-store";
 import { useUser } from "@/lib/auth-context";
 import { icons } from "@/constants";
 import { useFetch } from "@/lib/fetch";
+import { API_URL } from "@/lib/config";
 import Avatar from "@/components/Avatar";
 
 interface Message {
@@ -51,7 +52,7 @@ const ChatDetails = () => {
     useEffect(() => {
         if (!id) return;
 
-        socket = io(process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000");
+        socket = io(API_URL);
 
         socket.on("connect", () => {
             console.log("Connected to socket server");
