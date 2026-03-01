@@ -5,7 +5,7 @@ export default {
         name: "KarRide Driver",
         slug: "karride-driver",
         owner: "netlinko",
-        version: "1.0.1",
+        version: "2.0.0",
         orientation: "portrait",
         icon: "./assets/icons/icon.png",
         scheme: "ng.karride.driver",

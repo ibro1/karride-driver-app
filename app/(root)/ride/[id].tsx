@@ -127,6 +127,9 @@ const RideScreen = () => {
         }
     };
 
+    const [pinAttemptsRemaining, setPinAttemptsRemaining] = useState(5);
+    const [maxAttemptsExceeded, setMaxAttemptsExceeded] = useState(false);
+
     const handleVerifyPin = async () => {
         const enteredPin = pin.join("");
         if (enteredPin.length !== 4) {
@@ -136,7 +139,7 @@ const RideScreen = () => {
 
         setIsUpdating(true);
         try {
-            await verifyPin(Number(id), enteredPin);
+            const result = await verifyPin(Number(id), enteredPin);
             setStatus("in_progress");
             setShowPinModal(false);
 
@@ -146,12 +149,42 @@ const RideScreen = () => {
 
             Alert.alert("Success", "Ride started successfully!");
         } catch (error: any) {
-            Alert.alert("Verification Failed", error.message || "Invalid PIN. Please try again.");
-            setPin(["", "", "", ""]);
-            inputRefs.current[0]?.focus();
+            const errorData = error.response?.data;
+            
+            if (errorData?.maxAttemptsExceeded) {
+                setMaxAttemptsExceeded(true);
+                Alert.alert(
+                    "Maximum Attempts Exceeded",
+                    "Please ask the rider to generate a new PIN.",
+                    [
+                        {
+                            text: "Request New PIN",
+                            onPress: () => requestNewPin()
+                        },
+                        { text: "Cancel", style: "cancel" }
+                    ]
+                );
+            } else {
+                const remaining = errorData?.attemptsRemaining ?? pinAttemptsRemaining - 1;
+                setPinAttemptsRemaining(remaining);
+                Alert.alert(
+                    "Verification Failed",
+                    error.message || `Invalid PIN. ${remaining} attempts remaining.`
+                );
+                setPin(["", "", "", ""]);
+                inputRefs.current[0]?.focus();
+            }
         } finally {
             setIsUpdating(false);
         }
+    };
+
+    const requestNewPin = () => {
+        Alert.alert(
+            "Request New PIN",
+            "Ask the rider to tap 'Generate New PIN' on their screen.",
+            [{ text: "OK" }]
+        );
     };
 
     const handlePinChange = (text: string, index: number) => {
