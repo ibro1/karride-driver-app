@@ -10,8 +10,6 @@ import {
     sendOtp as sendOtpAPI,
     verifyOtp as verifyOtpAPI,
 } from "./auth-api";
-import { signInWithPhoneNumber, ConfirmationResult } from "firebase/auth";
-import { auth } from "./firebase";
 
 interface User {
     id: string;
@@ -41,8 +39,8 @@ interface AuthContextType {
     verifyEmail: (email: string, code: string) => Promise<void>;
     sendVerificationCode: (email: string) => Promise<void>;
     refreshSession: () => Promise<void>;
-    sendOtp: (phone: string, verifier?: any) => Promise<void>;
-    verifyOtp: (phone: string, code: string, idToken?: string) => Promise<any>;
+    sendOtp: (phone: string) => Promise<void>;
+    verifyOtp: (phone: string, code: string) => Promise<any>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -52,7 +50,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
     const [user, setUser] = useState<User | null>(null);
     const [isLoaded, setIsLoaded] = useState(false);
-    const [verificationId, setVerificationId] = useState<ConfirmationResult | null>(null);
 
     // Load session on mount
     useEffect(() => {
@@ -139,48 +136,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         }
     };
 
-    const sendOtp = async (phone: string, verifier?: any) => {
+    const sendOtp = async (phone: string) => {
         try {
-            const result = await sendOtpAPI(phone);
-            // Check if backend signaled to use Firebase
-            if (result.useFirebase) {
-                if (!verifier) {
-                    throw new Error("Recaptcha Verifier is required for Firebase SMS");
-                }
-                console.log("Initiating Firebase SMS...");
-                const confirmation = await signInWithPhoneNumber(auth, phone, verifier);
-                console.log("Firebase signInWithPhoneNumber result:", confirmation ? "Success (Obj)" : "Null");
-                setVerificationId(confirmation);
-                console.log("Firebase SMS sent successfully");
-            } else {
-                console.log("Backend said useFirebase = FALSE. Using standard SMS.");
-            }
+            await sendOtpAPI(phone);
+            console.log("OTP sent successfully via backend SMS provider");
         } catch (error) {
             throw error;
         }
     };
 
-    const verifyOtp = async (phone: string, code: string, idToken?: string) => {
-        // If idToken is explicitly passed, use it. Otherwise, look for local firebase confirmation.
-        let finalIdToken = idToken;
-
-        if (!finalIdToken && verificationId) {
-            try {
-                console.log("Verifying with Firebase...");
-                const credential = await verificationId.confirm(code);
-                if (credential.user) {
-                    finalIdToken = await credential.user.getIdToken();
-                }
-            } catch (error) {
-                console.error("Firebase Confirm Error:", error);
-                throw new Error("Invalid code");
-            }
-        }
-
+    const verifyOtp = async (phone: string, code: string) => {
         try {
-            const response = await verifyOtpAPI(phone, code, finalIdToken);
+            const response = await verifyOtpAPI(phone, code);
             setUser(response.session?.user || response.user);
-            if (response.session) setVerificationId(null);
             return response;
         } catch (error) {
             throw error;

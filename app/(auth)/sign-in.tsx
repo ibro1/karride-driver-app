@@ -1,7 +1,5 @@
 import { router } from "expo-router";
 import React, { useCallback, useState, useRef, useMemo } from "react";
-import FirebaseRecaptchaVerifierModal from "@/components/FirebaseRecaptchaVerifierModal";
-import { firebaseConfig } from "@/lib/firebase";
 import {
   Alert,
   Text,
@@ -37,7 +35,6 @@ const SignIn = () => {
   const { sendOtp, isLoaded } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [phone, setPhone] = useState("");
-  const recaptchaVerifier = useRef(null);
 
   const [selectedCountry, setSelectedCountry] = useState(countries[0]);
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
@@ -80,7 +77,7 @@ const SignIn = () => {
       console.log(">>> 📱 [DRIVER] SENDING OTP TO:", formattedPhone);
       console.log("====================================================\n");
 
-      await sendOtp(formattedPhone, recaptchaVerifier.current);
+      await sendOtp(formattedPhone);
 
       router.push({ pathname: "/(auth)/verification", params: { phone: formattedPhone } });
     } catch (err: any) {
@@ -178,11 +175,6 @@ const SignIn = () => {
           />
         </View>
       </BottomSheetModal>
-
-      <FirebaseRecaptchaVerifierModal
-        ref={recaptchaVerifier}
-        firebaseConfig={firebaseConfig}
-      />
     </SafeAreaView>
   );
 };
