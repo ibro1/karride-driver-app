@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Text, View } from "react-native";
+import { ActivityIndicator, Text, View, Image } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
 import { icons } from "@/constants";
@@ -13,7 +13,7 @@ import { useDriverStore, useLocationStore } from "@/store";
 import { Driver, MarkerData } from "@/types/type";
 import { useAuth } from "@/lib/auth-context";
 
-const directionsAPI = process.env.EXPO_PUBLIC_DIRECTIONS_API_KEY;
+const directionsAPI = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
 
 const Map = ({ isOnline }: { isOnline?: boolean }) => {
   const { user } = useAuth();
@@ -126,10 +126,13 @@ const Map = ({ isOnline }: { isOnline?: boolean }) => {
             longitude: marker.longitude,
           }}
           title={marker.title}
-          image={
-            selectedDriver === +marker.id ? icons.selectedMarker : icons.marker
-          }
-        />
+        >
+          <Image
+            source={selectedDriver === +marker.id ? icons.selectedMarker : icons.marker}
+            className="w-8 h-8"
+            resizeMode="contain"
+          />
+        </Marker>
       ))}
 
       {destinationLatitude && destinationLongitude && (

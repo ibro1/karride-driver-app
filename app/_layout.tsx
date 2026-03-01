@@ -8,6 +8,10 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 
 import { AuthProvider } from "@/lib/auth-context";
+import { validateConfig } from "@/lib/config";
+
+// Validate environment configuration at startup
+validateConfig();
 
 // Prevent the splash screen from auto-hiding before asset loading is complete....
 SplashScreen.preventAutoHideAsync();

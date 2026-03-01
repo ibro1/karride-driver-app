@@ -1,6 +1,5 @@
 import { io, Socket } from "socket.io-client";
-
-const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
+import { API_URL } from "./config";
 
 let socket: Socket;
 

@@ -30,7 +30,7 @@ export default {
                 light: "./assets/icons/ios-dark.png"
             },
             config: {
-                googleMapsApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "REPLACE_WITH_YOUR_GOOGLE_MAPS_API_KEY"
+                googleMapsApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
             }
         },
         android: {
@@ -41,7 +41,7 @@ export default {
             package: "ng.karride.driver",
             config: {
                 googleMaps: {
-                    apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "REPLACE_WITH_YOUR_GOOGLE_MAPS_API_KEY"
+                    apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
                 }
             },
             softwareKeyboardLayoutMode: "pan"

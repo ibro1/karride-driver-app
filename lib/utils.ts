@@ -1,3 +1,4 @@
+
 import { Ride } from "@/types/type";
 
 export const sortRides = (rides: Ride[]): Ride[] => {
@@ -45,19 +46,19 @@ export function formatDate(dateString: string): string {
   return `${day < 10 ? "0" + day : day} ${month} ${year}`;
 }
 
+import { API_URL } from "./config";
+
 export function cleanUrl(url: string | null | undefined): string | null {
   if (!url) return null;
 
-  const apiUrl = process.env.EXPO_PUBLIC_API_URL || "";
-
   // Clean localhost
   if (url.includes("localhost") || url.includes("127.0.0.1")) {
-    return url.replace(/https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/, apiUrl);
+    return url.replace(/https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/, API_URL);
   }
 
   // Handle relative paths
   if (!url.startsWith("http")) {
-    return `${apiUrl}${url.startsWith("/") ? "" : "/"}${url}`;
+    return `${API_URL}${url.startsWith("/") ? "" : "/"}${url}`;
   }
 
   return url;
