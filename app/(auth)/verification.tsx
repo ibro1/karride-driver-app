@@ -19,7 +19,9 @@ const Verification = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [isNewUser, setIsNewUser] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const inputRef = useRef<TextInput>(null);
+    const hasAttemptedRef = useRef(false);
 
     // Focus input on mount
     useEffect(() => {
@@ -31,13 +33,17 @@ const Verification = () => {
     const onVerifyPress = useCallback(async () => {
         if (!isLoaded || !phone) return;
         if (isSubmitting) return;
+        if (hasAttemptedRef.current) return;
 
         if (code.length < CODE_LENGTH) {
-            Alert.alert("Error", "Please enter a valid OTP");
+            setErrorMessage("Please enter a valid OTP");
             return;
         }
 
+        hasAttemptedRef.current = true;
         setIsSubmitting(true);
+        setErrorMessage(null);
+
         try {
             const response = await verifyOtp(phone as string, code);
 
@@ -51,23 +57,26 @@ const Verification = () => {
                     router.replace("/(root)/(tabs)/home");
                 }
             } else {
-                Alert.alert("Error", response.error || "Verification failed");
+                setErrorMessage(response.error || "Verification failed");
                 setCode("");
+                hasAttemptedRef.current = false;
                 inputRef.current?.focus();
             }
         } catch (err: any) {
-            Alert.alert("Error", err.message || "Invalid code");
+            setErrorMessage(err.message || "Invalid code");
+            setCode("");
+            hasAttemptedRef.current = false;
         } finally {
             setIsSubmitting(false);
         }
     }, [isLoaded, phone, code, verifyOtp, isSubmitting]);
 
-    // Auto submit when 6 digits are typed
+    // Auto submit when 6 digits are typed - only if not already attempted
     useEffect(() => {
-        if (code.length === CODE_LENGTH) {
+        if (code.length === CODE_LENGTH && !hasAttemptedRef.current && !isSubmitting) {
             onVerifyPress();
         }
-    }, [code, onVerifyPress]);
+    }, [code]);
 
     const handleContainerPress = () => {
         inputRef.current?.focus();
@@ -121,13 +130,25 @@ const Verification = () => {
                             ref={inputRef}
                             className="absolute w-full h-full opacity-0"
                             value={code}
-                            onChangeText={(text) => setCode(text.replace(/[^0-9]/g, "").slice(0, CODE_LENGTH))}
+                            onChangeText={(text) => {
+                                setCode(text.replace(/[^0-9]/g, "").slice(0, CODE_LENGTH));
+                                setErrorMessage(null);
+                                hasAttemptedRef.current = false;
+                            }}
                             keyboardType="number-pad"
                             textContentType="oneTimeCode"
                             autoComplete="sms-otp"
                             caretHidden
                         />
                     </TouchableOpacity>
+
+                    {errorMessage && (
+                        <View className="mt-4 p-3 bg-red-50 rounded-lg border border-red-200">
+                            <Text className="text-red-600 text-sm font-Jakarta text-center">
+                                {errorMessage}
+                            </Text>
+                        </View>
+                    )}
                 </View>
 
                 <View className="pb-4 pt-6">

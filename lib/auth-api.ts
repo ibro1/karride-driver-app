@@ -1,6 +1,7 @@
 import * as SecureStore from "expo-secure-store";
+import { API_URL } from "./config";
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL;
+console.log(`[AUTH_API] Using API_URL: "${API_URL}"`);
 
 interface AuthResponse {
     user: any;

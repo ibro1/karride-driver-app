@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
+import { EXPO_PROJECT_ID } from './config';
 
 Notifications.setNotificationHandler({
     handleNotification: async () => ({
@@ -40,8 +41,7 @@ export const usePushNotifications = () => {
                 return;
             }
             try {
-                const projectId = process.env.EXPO_PUBLIC_PROJECT_ID;
-                token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
+                token = (await Notifications.getExpoPushTokenAsync({ projectId: EXPO_PROJECT_ID })).data;
                 console.log("Push Token:", token);
             } catch (e) {
                 console.log("Error fetching push token (safe to ignore in dev):", e);
