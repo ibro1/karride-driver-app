@@ -559,6 +559,23 @@ export const sendOtp = async (phone: string): Promise<any> => {
 };
 
 /**
+ * Resend OTP via SMS
+ * Forces SMS channel when WhatsApp delivery fails
+ */
+export const resendOtp = async (phone: string): Promise<any> => {
+    const response = await fetch(`${API_URL}/api/auth/otp/resend`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Origin": "myapp://",
+        },
+        body: JSON.stringify({ phone }),
+    });
+
+    return await handleResponse(response, "Failed to resend OTP");
+};
+
+/**
  * Verify OTP
  */
 export const verifyOtp = async (phone: string, code: string, idToken?: string): Promise<any> => {

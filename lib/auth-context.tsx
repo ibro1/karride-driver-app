@@ -9,6 +9,7 @@ import {
     sendVerificationCode as sendVerificationCodeAPI,
     sendOtp as sendOtpAPI,
     verifyOtp as verifyOtpAPI,
+    resendOtp as resendOtpAPI,
 } from "./auth-api";
 
 interface User {
@@ -40,6 +41,7 @@ interface AuthContextType {
     sendVerificationCode: (email: string) => Promise<void>;
     refreshSession: () => Promise<void>;
     sendOtp: (phone: string) => Promise<void>;
+    resendOtp: (phone: string) => Promise<void>;
     verifyOtp: (phone: string, code: string) => Promise<any>;
 }
 
@@ -155,6 +157,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         }
     };
 
+    const resendOtp = async (phone: string) => {
+        try {
+            await resendOtpAPI(phone);
+            console.log("OTP resent successfully via SMS");
+        } catch (error) {
+            throw error;
+        }
+    };
+
     const value: AuthContextType = {
         user,
         isLoaded,
@@ -166,6 +177,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         sendVerificationCode,
         refreshSession,
         sendOtp,
+        resendOtp,
         verifyOtp,
     };
 

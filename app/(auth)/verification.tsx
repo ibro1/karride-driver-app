@@ -1,6 +1,6 @@
 import { useLocalSearchParams, router } from "expo-router";
 import React, { useCallback, useState, useEffect, useRef } from "react";
-import { Alert, Text, View, TextInput, TouchableOpacity, Platform, Image } from "react-native";
+import { Alert, Text, View, TextInput, TouchableOpacity, Platform, Image, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { ReactNativeModal } from "react-native-modal";
@@ -10,18 +10,32 @@ import { icons, images } from "@/constants";
 import { useAuth } from "@/lib/auth-context";
 
 const CODE_LENGTH = 6;
+const RESEND_COOLDOWN_SECONDS = 30;
 
 const Verification = () => {
     const { phone } = useLocalSearchParams();
-    const { verifyOtp, isLoaded } = useAuth();
+    const { verifyOtp, resendOtp, isLoaded } = useAuth();
 
     const [code, setCode] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isResending, setIsResending] = useState(false);
+    const [resendCooldown, setResendCooldown] = useState(0);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [isNewUser, setIsNewUser] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [resendSuccess, setResendSuccess] = useState<string | null>(null);
     const inputRef = useRef<TextInput>(null);
     const hasAttemptedRef = useRef(false);
+
+    // Cooldown timer for resend
+    useEffect(() => {
+        if (resendCooldown > 0) {
+            const timer = setInterval(() => {
+                setResendCooldown((prev) => prev - 1);
+            }, 1000);
+            return () => clearInterval(timer);
+        }
+    }, [resendCooldown]);
 
     // Focus input on mount
     useEffect(() => {
@@ -80,6 +94,32 @@ const Verification = () => {
 
     const handleContainerPress = () => {
         inputRef.current?.focus();
+    };
+
+    const handleResendOtp = useCallback(async () => {
+        if (!phone || isResending || resendCooldown > 0) return;
+
+        setIsResending(true);
+        setErrorMessage(null);
+        setResendSuccess(null);
+
+        try {
+            await resendOtp(phone as string);
+            setResendSuccess("OTP resent successfully via SMS");
+            setResendCooldown(RESEND_COOLDOWN_SECONDS);
+            // Clear success message after 3 seconds
+            setTimeout(() => setResendSuccess(null), 3000);
+        } catch (err: any) {
+            setErrorMessage(err.message || "Failed to resend OTP");
+        } finally {
+            setIsResending(false);
+        }
+    }, [phone, resendOtp, isResending, resendCooldown]);
+
+    const formatCooldown = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
 
     return (
@@ -149,6 +189,44 @@ const Verification = () => {
                             </Text>
                         </View>
                     )}
+
+                    {resendSuccess && (
+                        <View className="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
+                            <Text className="text-green-600 text-sm font-Jakarta text-center">
+                                {resendSuccess}
+                            </Text>
+                        </View>
+                    )}
+
+                    {/* Resend Section */}
+                    <View className="mt-6 items-center">
+                        <TouchableOpacity
+                            onPress={handleResendOtp}
+                            disabled={isResending || resendCooldown > 0}
+                            className={`flex-row items-center py-2 px-4 rounded-full ${
+                                isResending || resendCooldown > 0
+                                    ? "opacity-50"
+                                    : "active:opacity-70"
+                            }`}
+                        >
+                            {isResending ? (
+                                <>
+                                    <ActivityIndicator size="small" color="#0286FF" />
+                                    <Text className="ml-2 text-primary-500 font-JakartaSemiBold text-sm">
+                                        Resending...
+                                    </Text>
+                                </>
+                            ) : resendCooldown > 0 ? (
+                                <Text className="text-neutral-500 font-Jakarta text-sm">
+                                    Resend via SMS in {formatCooldown(resendCooldown)}
+                                </Text>
+                            ) : (
+                                <Text className="text-primary-500 font-JakartaSemiBold text-sm">
+                                    Didn't receive it? Resend via SMS
+                                </Text>
+                            )}
+                        </TouchableOpacity>
+                    </View>
                 </View>
 
                 <View className="pb-4 pt-6">
