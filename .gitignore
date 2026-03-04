@@ -24,3 +24,4 @@ expo-env.d.ts
 !README.md
 *.md
 *.zip
+crash_log.txt

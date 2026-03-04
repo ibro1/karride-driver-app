@@ -4,10 +4,21 @@
  * Logs warnings in development instead of crashing
  */
 
-function getEnvVar(name: string, required: boolean = true, fallback: string = ""): string {
-    const value = process.env[name];
+// Debug: Log all EXPO_PUBLIC_ environment variables
+console.log("[CONFIG_DEBUG] Loading config...");
+const expoEnvKeys = Object.keys(process.env).filter(k => k.includes('EXPO_PUBLIC'));
+console.log(`[CONFIG_DEBUG] EXPO_PUBLIC_ keys found: ${expoEnvKeys.join(', ')}`);
+expoEnvKeys.forEach(key => {
+    console.log(`[CONFIG_DEBUG] ${key} = "${process.env[key]}"`);
+});
 
-    if (!value || value.trim() === "") {
+function getEnvVar(name: string, required: boolean = true, fallback: string = ""): string {
+    // Access process.env directly by property name
+    const value = process.env[name as keyof typeof process.env] as string | undefined;
+
+    console.log(`[CONFIG_DEBUG] getEnvVar("${name}") = "${value}"`);
+
+    if (!value || value.trim() === "" || value === "undefined") {
         if (required) {
             // Log warning instead of crashing
             console.warn(
@@ -21,10 +32,12 @@ function getEnvVar(name: string, required: boolean = true, fallback: string = ""
     return value;
 }
 
-// API Configuration
-export const API_URL = getEnvVar("EXPO_PUBLIC_API_URL");
-console.log(`[CONFIG] API_URL = "${API_URL}"`);
-console.log(`[CONFIG] process.env.EXPO_PUBLIC_API_URL = "${process.env.EXPO_PUBLIC_API_URL}"`);
+// API Configuration - Read directly from process.env
+const rawApiUrl = process.env.EXPO_PUBLIC_API_URL;
+console.log(`[CONFIG_DEBUG] Direct access - process.env.EXPO_PUBLIC_API_URL = "${rawApiUrl}"`);
+
+export const API_URL = rawApiUrl && rawApiUrl !== "undefined" ? rawApiUrl : "";
+console.log(`[CONFIG_DEBUG] API_URL = "${API_URL}"`);
 
 // Google Maps Configuration
 export const GOOGLE_MAPS_API_KEY = getEnvVar("EXPO_PUBLIC_GOOGLE_MAPS_API_KEY");

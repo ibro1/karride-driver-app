@@ -6,29 +6,15 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal",
-      "env": {
-        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "AIzaSyCAHKQThIKvOGRKJlg5K3DJ4GKixdKGNnU"
-      }
+      "distribution": "internal"
     },
     "preview": {
       "distribution": "internal",
-      "channel": "preview",
-      "env": {
-        "EXPO_PUBLIC_API_URL": "https://karride.ng",
-        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "179377550784-msonq29je2kfricaqbnvigbt54kdm2hg.apps.googleusercontent.com",
-        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "179377550784-f428dc4gpn8cq9vb6rc3gclo6q7v284v.apps.googleusercontent.com",
-        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "179377550784-6bp206u58o1mcv8qap426qdks7i7scos.apps.googleusercontent.com",
-        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "AIzaSyCAHKQThIKvOGRKJlg5K3DJ4GKixdKGNnU"
-      }
+      "channel": "preview"
     },
     "production": {
       "autoIncrement": true,
-      "channel": "production",
-      "env": {
-        "EXPO_PUBLIC_API_URL": "https://karride.ng",
-        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY": "AIzaSyCAHKQThIKvOGRKJlg5K3DJ4GKixdKGNnU"
-      }
+      "channel": "production"
     }
   },
   "submit": {
